@@ -36,6 +36,9 @@ public class User implements UserDetails {
     private String location;
     private String refreshToken;
 
+    @OneToMany(mappedBy = "owner")
+    private List<Pet> pets;
+
     @Enumerated(EnumType.STRING)
     private Role role;
 

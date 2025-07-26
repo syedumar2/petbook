@@ -4,6 +4,7 @@ package com.petbook.petbook_backend.controller;
 import com.petbook.petbook_backend.dto.request.LoginRequest;
 import com.petbook.petbook_backend.dto.request.RefreshTokenRequest;
 import com.petbook.petbook_backend.dto.request.RegisterRequest;
+import com.petbook.petbook_backend.dto.response.ApiResponse;
 import com.petbook.petbook_backend.dto.response.AuthResponse;
 import com.petbook.petbook_backend.service.AuthService;
 import com.petbook.petbook_backend.service.JwtService;
@@ -31,7 +32,7 @@ public class AuthController {
 
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> loginEndpoint(@RequestBody LoginRequest request, HttpServletResponse response) {
+    public ResponseEntity<ApiResponse<AuthResponse>> loginEndpoint(@RequestBody LoginRequest request, HttpServletResponse response) {
 
         AuthResponse authResponse = authService.login(request);
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", authResponse.getRefreshToken())
@@ -42,19 +43,19 @@ public class AuthController {
                 .sameSite("Strict")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
-        return ResponseEntity.ok(AuthResponse.builder().token(authResponse.getToken()).build());
+        return ResponseEntity.ok(ApiResponse.success("Logged in",AuthResponse.builder().token(authResponse.getToken()).build()));
 
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> registerEndpoint(@RequestBody RegisterRequest request) {
+    public ResponseEntity<ApiResponse<String>> registerEndpoint(@RequestBody RegisterRequest request) {
         String response = authService.register(request);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success("Success",response));
 
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> refreshToken(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> refreshToken(HttpServletRequest request) {
         String refreshToken = null;
         for (Cookie cookie : request.getCookies()) {
             if ("refreshToken".equals(cookie.getName())) {
@@ -65,7 +66,7 @@ public class AuthController {
         if (refreshToken == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
-        return ResponseEntity.ok(authService.refreshAccessToken(refreshToken));
+        return ResponseEntity.ok(ApiResponse.success("New token issued",authService.refreshAccessToken(refreshToken)));
     }
 
     @PostMapping("/logout")
