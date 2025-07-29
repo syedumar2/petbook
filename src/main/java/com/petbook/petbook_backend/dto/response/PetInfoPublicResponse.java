@@ -9,7 +9,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class PetInfoResponse {
+public class PetInfoPublicResponse {
 
 
     private String name;
@@ -20,7 +20,7 @@ public class PetInfoResponse {
     private boolean adopted = false;
     private String owner;
 
-    public PetInfoResponse(Pet post) {
+    public PetInfoPublicResponse(Pet post) {
         this.name = post.getName();
         this.type = post.getType();
         this.breed = post.getBreed();
@@ -32,8 +32,8 @@ public class PetInfoResponse {
 
 
 
-    public static PetInfoResponse fromEntity(Pet pet){
-        return new PetInfoResponse(
+    public static PetInfoPublicResponse fromEntity(Pet pet){
+        return new PetInfoPublicResponse(
                 pet.getName(),
                 pet.getType(),
                 pet.getBreed(),
