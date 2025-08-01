@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 
 @Data
 @AllArgsConstructor
@@ -18,7 +20,7 @@ public class UpdatePetRequest {
     private String type;
     private String breed;
     private String location;
-    private String imageUrl;
+    private List<String> imageUrls;
     private boolean adopted;
 
 

@@ -4,6 +4,8 @@ package com.petbook.petbook_backend.models;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
+
 @Entity
 @Table(name = "pets")
 @Getter
@@ -26,8 +28,11 @@ public class Pet {
     @Column(nullable = false)
     private String location;
 
-    //TODO: make this not null later
-    private String imageUrl;
+    //Learn this in depth later
+    @ElementCollection
+    @CollectionTable(name = "pet_images",joinColumns = @JoinColumn(name = "pet_id"))
+    @Column(name = "image_url")
+    private List<String> imageUrls;
 
     private boolean adopted = false;
 

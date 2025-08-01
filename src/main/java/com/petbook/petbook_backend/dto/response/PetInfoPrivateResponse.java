@@ -3,6 +3,8 @@ package com.petbook.petbook_backend.dto.response;
 
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @Builder
@@ -14,7 +16,7 @@ public class PetInfoPrivateResponse {
     private String type;
     private String breed;
     private String location;
-    private String imageUrl;
+    private List<String> imageUrl;
     private boolean adopted = false;
     private String owner;
 

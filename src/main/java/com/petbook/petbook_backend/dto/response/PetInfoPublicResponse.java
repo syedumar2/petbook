@@ -3,6 +3,8 @@ package com.petbook.petbook_backend.dto.response;
 import com.petbook.petbook_backend.models.Pet;
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @Builder
@@ -16,7 +18,7 @@ public class PetInfoPublicResponse {
     private String type;
     private String breed;
     private String location;
-    private String imageUrl;
+    private List<String> imageUrls;
     private boolean adopted = false;
     private String owner;
 
@@ -25,7 +27,7 @@ public class PetInfoPublicResponse {
         this.type = post.getType();
         this.breed = post.getBreed();
         this.location = post.getLocation();
-        this.imageUrl = post.getImageUrl();
+        this.imageUrls = post.getImageUrls();
         this.adopted = post.isAdopted();
         this.owner = post.getOwner().getEmail();
     }
@@ -38,7 +40,7 @@ public class PetInfoPublicResponse {
                 pet.getType(),
                 pet.getBreed(),
                 pet.getLocation(),
-                pet.getImageUrl(),
+                pet.getImageUrls(),
                 pet.isAdopted(),
                 pet.getOwner().getEmail()
         );

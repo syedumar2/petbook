@@ -20,6 +20,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,20 +42,20 @@ public class PetService {
         pet.setType(request.getType());
         pet.setBreed(request.getBreed());
         pet.setLocation(request.getLocation());
-        pet.setImageUrl(request.getImageUrl());
+        pet.setImageUrls(request.getImageUrls());
         pet.setOwner(request.getOwner());
 
         Pet savedPet = petRepository.save(pet);
 
 
         return PetInfoPrivateResponse.builder()
-                .id(pet.getId())
-                .name(pet.getName())
-                .type(pet.getType())
-                .breed(pet.getBreed())
-                .location(pet.getLocation())
-                .imageUrl(pet.getImageUrl())
-                .adopted(pet.isAdopted())
+                .id(savedPet.getId())
+                .name(savedPet.getName())
+                .type(savedPet.getType())
+                .breed(savedPet.getBreed())
+                .location(savedPet.getLocation())
+                .imageUrl(savedPet.getImageUrls())
+                .adopted(savedPet.isAdopted())
                 .owner(email)
                 .build();
 
@@ -72,7 +73,7 @@ public class PetService {
                 .type(p.getType())
                 .breed(p.getBreed())
                 .location(p.getLocation())
-                .imageUrl(p.getImageUrl())
+                .imageUrl(p.getImageUrls())
                 .adopted(p.isAdopted())
                 .owner(email)
                 .build()));
@@ -82,15 +83,20 @@ public class PetService {
     @Transactional
     public List<PetInfoPublicResponse> getAllPets() {
         List<PetInfoPublicResponse> list = new ArrayList<>();
-        petRepository.findAll().forEach(p -> list.add(PetInfoPublicResponse.builder()
-                .name(p.getName())
-                .type(p.getType())
-                .breed(p.getBreed())
-                .location(p.getLocation())
-                .imageUrl(p.getImageUrl())
-                .adopted(p.isAdopted())
-                .owner(p.getOwner().getEmail())
-                .build()));
+        petRepository.findAll().forEach(p -> {
+
+            List<String> urls = new ArrayList<>(p.getImageUrls());
+
+            list.add(PetInfoPublicResponse.builder()
+                    .name(p.getName())
+                    .type(p.getType())
+                    .breed(p.getBreed())
+                    .location(p.getLocation())
+                    .imageUrls(urls)
+                    .adopted(p.isAdopted())
+                    .owner(p.getOwner().getEmail())
+                    .build());
+        });
         return list;
 
     }
@@ -103,7 +109,7 @@ public class PetService {
                 .type(p.getType())
                 .breed(p.getBreed())
                 .location(p.getLocation())
-                .imageUrl(p.getImageUrl())
+                .imageUrls(p.getImageUrls())
                 .adopted(p.isAdopted())
                 .owner(p.getOwner().getEmail())
                 .build()));
@@ -140,7 +146,7 @@ public class PetService {
         if (request.getType() != null) pet.setType(request.getType());
         if (request.getBreed() != null) pet.setBreed(request.getBreed());
         if (request.getLocation() != null) pet.setLocation(request.getLocation());
-        if (request.getImageUrl() != null) pet.setImageUrl(request.getImageUrl());
+        if (request.getImageUrls() != null) pet.setImageUrls(request.getImageUrls());
         if(request.isAdopted()) pet.setAdopted(true);
 
 
@@ -149,13 +155,13 @@ public class PetService {
 
 
         return PetInfoPrivateResponse.builder()
-                .id(pet.getId())
-                .name(pet.getName())
-                .type(pet.getType())
-                .breed(pet.getBreed())
-                .location(pet.getLocation())
-                .imageUrl(pet.getImageUrl())
-                .adopted(pet.isAdopted())
+                .id(savedPet.getId())
+                .name(savedPet.getName())
+                .type(savedPet.getType())
+                .breed(savedPet.getBreed())
+                .location(savedPet.getLocation())
+                .imageUrl(savedPet.getImageUrls())
+                .adopted(savedPet.isAdopted())
                 .owner(email)
                 .build();
 
@@ -181,7 +187,7 @@ public class PetService {
                 .type(pet.getType())
                 .breed(pet.getBreed())
                 .location(pet.getLocation())
-                .imageUrl(pet.getImageUrl())
+                .imageUrl(pet.getImageUrls())
                 .adopted(pet.isAdopted())
                 .owner(email)
                 .build();
