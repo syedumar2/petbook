@@ -16,7 +16,7 @@ public class PetInfoPrivateResponse {
     private String type;
     private String breed;
     private String location;
-    private List<String> imageUrl;
+    private List<String> imageUrls;
     private boolean adopted = false;
     private String owner;
 

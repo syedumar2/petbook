@@ -56,14 +56,22 @@ public class ProtectedController {
 
     }
 
-    @PutMapping("/user/me/pets/{petId}")
-    public ResponseEntity<ApiResponse<PetInfoPrivateResponse>> updatePet(@PathVariable @NotNull long petId, @RequestBody UpdatePetRequest request) {
+    @PutMapping(value = "/user/me/pets/{petId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<PetInfoPrivateResponse>> updatePet(@PathVariable @NotNull long petId,
+                                                                         @Valid @RequestPart("petData") UpdatePetRequest request,
+                                                                         @RequestPart(value = "images", required = false) List<MultipartFile> images) {
+
+        if (images != null && !images.isEmpty()) {
+            List<String> imageUrls = images.stream()
+                    .map(cloudinaryService::uploadFile)
+                    .collect(Collectors.toList());
+            request.setImageUrls(imageUrls);
+        }
 
         PetInfoPrivateResponse response = petService.updatePetPost(request, petId);
-
         return ResponseEntity.ok(ApiResponse.success("Pet listing updated successfully", response));
-
     }
+
 
     @DeleteMapping("/user/me/pets/{petId}")
     public ResponseEntity<ApiResponse<PetInfoPrivateResponse>> deletePet(@PathVariable @NotNull long petId) {
@@ -75,10 +83,10 @@ public class ProtectedController {
 
 
 }
-
+//TODO advanced search q with filters
 //TODO write repo tests
 //TODO write controller tests
-//TODO Build image upload feature
 //TODO websockets
-//TODO advanced search q
+//TODO admin dashboard and verification (might need more overhaul)
+
 

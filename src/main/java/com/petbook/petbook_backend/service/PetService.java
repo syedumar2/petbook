@@ -20,7 +20,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.awt.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,7 +54,7 @@ public class PetService {
                 .type(savedPet.getType())
                 .breed(savedPet.getBreed())
                 .location(savedPet.getLocation())
-                .imageUrl(savedPet.getImageUrls())
+                .imageUrls(savedPet.getImageUrls())
                 .adopted(savedPet.isAdopted())
                 .owner(email)
                 .build();
@@ -73,7 +73,7 @@ public class PetService {
                 .type(p.getType())
                 .breed(p.getBreed())
                 .location(p.getLocation())
-                .imageUrl(p.getImageUrls())
+                .imageUrls(p.getImageUrls())
                 .adopted(p.isAdopted())
                 .owner(email)
                 .build()));
@@ -151,17 +151,17 @@ public class PetService {
 
 
 
-        Pet savedPet = petRepository.save(pet);
+        pet = petRepository.save(pet);
 
 
         return PetInfoPrivateResponse.builder()
-                .id(savedPet.getId())
-                .name(savedPet.getName())
-                .type(savedPet.getType())
-                .breed(savedPet.getBreed())
-                .location(savedPet.getLocation())
-                .imageUrl(savedPet.getImageUrls())
-                .adopted(savedPet.isAdopted())
+                .id(pet.getId())
+                .name(pet.getName())
+                .type(pet.getType())
+                .breed(pet.getBreed())
+                .location(pet.getLocation())
+                .imageUrls(pet.getImageUrls())
+                .adopted(pet.isAdopted())
                 .owner(email)
                 .build();
 
@@ -187,7 +187,7 @@ public class PetService {
                 .type(pet.getType())
                 .breed(pet.getBreed())
                 .location(pet.getLocation())
-                .imageUrl(pet.getImageUrls())
+                .imageUrls(pet.getImageUrls())
                 .adopted(pet.isAdopted())
                 .owner(email)
                 .build();

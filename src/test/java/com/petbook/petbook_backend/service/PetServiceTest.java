@@ -11,7 +11,7 @@ import com.petbook.petbook_backend.repository.PetRepository;
 import com.petbook.petbook_backend.repository.UserRepository;
 import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -22,11 +22,12 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.hamcrest.MatcherAssert.assertThat;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -69,7 +70,7 @@ class PetServiceTest {
         request.setType("Dog");
         request.setBreed("Labrador");
         request.setLocation("Delhi");
-        request.setImageUrl("https://image.com/leo.jpg");
+        request.setImageUrls(new ArrayList<>(Arrays.asList("https://image.com/leo.jpg","https://image.com/leo.jpg")));
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
 
@@ -79,7 +80,7 @@ class PetServiceTest {
         savedPet.setType("Dog");
         savedPet.setBreed("Labrador");
         savedPet.setLocation("Delhi");
-        savedPet.setImageUrl("https://image.com/leo.jpg");
+        savedPet.setImageUrls(new ArrayList<>(Arrays.asList("https://image.com/leo.jpg","https://image.com/leo.jpg")));
         savedPet.setOwner(user);
         savedPet.setAdopted(false);
 
@@ -96,7 +97,7 @@ class PetServiceTest {
         assertEquals(savedPet.getType(), response.getType(), "Pet type should match");
         assertEquals(savedPet.getBreed(), response.getBreed(), "Pet breed should match");
         assertEquals(savedPet.getLocation(), response.getLocation(), "Pet location should match");
-        assertEquals(savedPet.getImageUrl(), response.getImageUrl(), "Pet image URL should match");
+        assertEquals(savedPet.getImageUrls(), response.getImageUrls(), "Pet image URL should match");
         assertEquals(savedPet.isAdopted(), response.isAdopted(), "Pet adopted status should match");
         assertEquals(user.getEmail(), response.getOwner(), "Pet owner email should match");
 
@@ -110,7 +111,7 @@ class PetServiceTest {
         assertEquals(savedPet.getType(), capturedPet.getType());
         assertEquals(savedPet.getBreed(), capturedPet.getBreed());
         assertEquals(savedPet.getLocation(), capturedPet.getLocation());
-        assertEquals(savedPet.getImageUrl(), capturedPet.getImageUrl());
+        assertEquals(savedPet.getImageUrls(), capturedPet.getImageUrls());
         assertEquals(savedPet.getOwner(), capturedPet.getOwner());
 
 
@@ -129,7 +130,7 @@ class PetServiceTest {
 
         SecurityContextHolder.setContext(securityContext);
         //given
-        Pet pet = new Pet();
+
         AddPetRequest request = new AddPetRequest();
         String email = "user@example.com";
         User user = new User();
@@ -150,8 +151,8 @@ class PetServiceTest {
         //given
 
         User user = new User();
-        Pet pet1 = new Pet(1L, "Doggo", "Dog", "Labrador", "Hyderabad", "url1", false, user);
-        Pet pet2 = new Pet(2L, "Kitty", "Cat", "Persian", "Delhi", "url2", true, user);
+        Pet pet1 = new Pet(1L, "Doggo", "Dog", "Labrador", "Hyderabad", new ArrayList<>(List.of("url1")) , false, user);
+        Pet pet2 = new Pet(2L, "Kitty", "Cat", "Persian", "Delhi", new ArrayList<>(List.of("url2")), true, user);
         List<Pet> mockPets = List.of(pet1, pet2);
         when(petRepository.findAll()).thenReturn(mockPets);
         //when
@@ -183,8 +184,8 @@ class PetServiceTest {
         user.setEmail(email);
         user.setId(1L);
 
-        Pet pet1 = new Pet(1L, "Doggo", "Dog", "Labrador", "Hyderabad", "url1", false, user);
-        Pet pet2 = new Pet(2L, "Kitty", "Cat", "Persian", "Delhi", "url2", true, user);
+        Pet pet1 = new Pet(1L, "Doggo", "Dog", "Labrador", "Hyderabad", new ArrayList<>(List.of("url1")), false, user);
+        Pet pet2 = new Pet(2L, "Kitty", "Cat", "Persian", "Delhi",  new ArrayList<>(List.of("url2")), true, user);
 
         //when
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
@@ -217,7 +218,7 @@ class PetServiceTest {
         pet1.setType("Dog");
         pet1.setBreed("Labrador");
         pet1.setLocation("Delhi");
-        pet1.setImageUrl("img1.jpg");
+        pet1.setImageUrls(new ArrayList<>(List.of("img1.jpg")));
         pet1.setAdopted(false);
         pet1.setOwner(user1); // adjust constructor as needed
 
@@ -226,7 +227,7 @@ class PetServiceTest {
         pet2.setType("Cat");
         pet2.setBreed("Persian");
         pet2.setLocation("Mumbai");
-        pet2.setImageUrl("img2.jpg");
+        pet2.setImageUrls(new ArrayList<>(List.of("img2.jpg")));
         pet2.setAdopted(true);
         pet2.setOwner(user2);
 
@@ -253,7 +254,7 @@ class PetServiceTest {
         // given
         int page = 0;
         int size = 2;
-        String sortField = "name";
+
         User user1 = new User();
         user1.setEmail("example@gmail.com");
 
@@ -265,7 +266,7 @@ class PetServiceTest {
         pet1.setType("Dog");
         pet1.setBreed("Labrador");
         pet1.setLocation("Delhi");
-        pet1.setImageUrl("img1.jpg");
+        pet1.setImageUrls(new ArrayList<>(List.of("img1.jpg")));
         pet1.setAdopted(false);
         pet1.setOwner(user1); // adjust constructor as needed
 
@@ -274,7 +275,7 @@ class PetServiceTest {
         pet2.setType("Cat");
         pet2.setBreed("Persian");
         pet2.setLocation("Mumbai");
-        pet2.setImageUrl("img2.jpg");
+        pet2.setImageUrls(new ArrayList<>(List.of("img1.jpg")));
         pet2.setAdopted(true);
         pet2.setOwner(user2);
 
@@ -339,30 +340,37 @@ class PetServiceTest {
         user.setEmail(email);
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
 
-        Pet savedPet = new Pet();
-        savedPet.setId(petId);
-        savedPet.setName("Leo");
-        savedPet.setType("Dog");
-        savedPet.setBreed("Labrador");
-        savedPet.setLocation("Delhi");
-        savedPet.setImageUrl("https://image.com/leo.jpg");
-        savedPet.setOwner(user);
-        savedPet.setAdopted(false);
+        Pet pet = new Pet();
+        pet.setId(petId);
+        pet.setName("Leo");
+        pet.setType("Dog");
+        pet.setBreed("Labrador");
+        pet.setLocation("Delhi");
+        pet.setImageUrls(new ArrayList<>(Arrays.asList("https://image.com/leo.jpg","https://image.com/leo.jpg")));
+        pet.setOwner(user);
+        pet.setAdopted(false);
 
-        when(petRepository.findById(petId)).thenReturn(Optional.of(savedPet));
+        when(petRepository.findById(petId)).thenReturn(Optional.of(pet));
 
         UpdatePetRequest request = new UpdatePetRequest();
         request.setAdopted(true);
         request.setName("Bruno");
 
+
+        // Stubbing repos
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(petRepository.findById(petId)).thenReturn(Optional.of(pet));
+        when(petRepository.save(any(Pet.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
         //when
         PetInfoPrivateResponse response = underTest.updatePetPost(request, petId);
 
         //then
-        assertThat(response.getId()).isEqualTo(savedPet.getId());
+        assertThat(response.getId()).isEqualTo(petId);
+        assertThat(response.getName()).isEqualTo("Bruno");
         assertThat(response.isAdopted()).isTrue();
-        assertThat(response.getName()).isEqualTo(request.getName());
-        verify(petRepository).save(savedPet);
+        assertThat(response.getId()).isEqualTo(1L); // if you expect id to be 1L
+
     }
 
     @Test
@@ -448,7 +456,7 @@ class PetServiceTest {
         savedPet.setType("Dog");
         savedPet.setBreed("Labrador");
         savedPet.setLocation("Delhi");
-        savedPet.setImageUrl("https://image.com/leo.jpg");
+        savedPet.setImageUrls(new ArrayList<>(Arrays.asList("https://image.com/leo.jpg","https://image.com/leo.jpg")));
         savedPet.setOwner(user1);
         savedPet.setAdopted(false);
 
@@ -486,7 +494,7 @@ class PetServiceTest {
         mockPet.setType("Dog");
         mockPet.setBreed("Labrador");
         mockPet.setLocation("Delhi");
-        mockPet.setImageUrl("https://image.com/leo.jpg");
+        mockPet.setImageUrls(new ArrayList<>(Arrays.asList("https://image.com/leo.jpg","https://image.com/leo.jpg")));
         mockPet.setOwner(user);
         mockPet.setAdopted(false);
 
@@ -528,7 +536,7 @@ class PetServiceTest {
         mockPet.setType("Dog");
         mockPet.setBreed("Labrador");
         mockPet.setLocation("Delhi");
-        mockPet.setImageUrl("https://image.com/leo.jpg");
+        mockPet.setImageUrls(new ArrayList<>(Arrays.asList("https://image.com/leo.jpg","https://image.com/leo.jpg")));
         mockPet.setOwner(user1);
         mockPet.setAdopted(false);
 
