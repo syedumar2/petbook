@@ -22,6 +22,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.security.auth.RefreshFailedException;
 import java.time.LocalDateTime;
 import java.util.Date;
 
@@ -36,6 +37,9 @@ public class AuthService {
 
 
     public String register(RegisterRequest request) {
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Email already in use");
+        }
         User user = new User();
         user.setFirstname(request.getFirstname());
         user.setLastname(request.getLastname());
@@ -50,6 +54,25 @@ public class AuthService {
 
     }
 
+    public String adminRegister(RegisterRequest request)
+    {
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Email already in use");
+        }
+        User user = new User();
+        user.setFirstname(request.getFirstname());
+        user.setLastname(request.getLastname());
+        user.setEmail(request.getEmail());
+        user.setLocation(request.getLocation());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setCreatedAt(LocalDateTime.now());
+        user.setRole(Role.ADMIN);
+
+        userRepository.save(user);
+        return "Admin registered successfully";
+
+    }
+
     public AuthResponse login(LoginRequest request) {
 
         try {
@@ -59,7 +82,7 @@ public class AuthService {
         } catch (AuthenticationException e) {
             throw new RuntimeException(e.getMessage());
         }
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new RuntimeException("Username not found in Db"));
+        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new UsernameNotFoundException("Username not found in Db"));
 
         String jwtToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
@@ -69,13 +92,13 @@ public class AuthService {
     }
 
 
-    public AuthResponse refreshAccessToken(String refreshToken) {
+    public AuthResponse refreshAccessToken(String refreshToken) throws RefreshFailedException {
         String username = jwtService.extractUsername(refreshToken);
         var user = userRepository.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         if (!jwtService.isTokenValid(refreshToken, user)) {
-            throw new RuntimeException("Invalid Refresh Token");
+            throw new RefreshFailedException("Invalid Refresh Token");
         }
         String newAccessToken = jwtService.generateToken(user);
 
@@ -93,7 +116,7 @@ public class AuthService {
         try {
             String userEmail = jwtService.extractUsername(refreshToken);
             User user = userRepository.findByEmail(userEmail)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
             user.setRefreshToken(null);
             userRepository.save(user);
         } catch (Exception e){
@@ -118,6 +141,8 @@ public class AuthService {
         }
         return null;
     }
+
+
 }
 
 

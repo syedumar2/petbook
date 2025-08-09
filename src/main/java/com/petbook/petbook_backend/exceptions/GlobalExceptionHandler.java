@@ -1,16 +1,19 @@
 package com.petbook.petbook_backend.exceptions;
 
-
 import com.petbook.petbook_backend.dto.response.ApiResponse;
-import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.validation.BindException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
-import io.jsonwebtoken.security.SignatureException;
+
+import javax.security.auth.RefreshFailedException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,42 +21,108 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(SignatureException.class)
-    public ResponseEntity<?> handleSignatureException(SignatureException ex) {
-        System.out.println("SignatureException handler called");
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("error", "Invalid JWT signature", "message", ex.getMessage()));
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<Object>> handleAllUnhandledExceptions(Exception ex) {
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.failure("An unexpected error occurred"));
     }
 
-    @ExceptionHandler(ExpiredJwtException.class)
-    public ResponseEntity<?> handleExpiredJwt(ExpiredJwtException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("error", "Token expired", "message", ex.getMessage()));
-    }
-
-    @ExceptionHandler(JwtException.class)
-    public ResponseEntity<?> handleJwtException(JwtException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("error", "JWT error", "message", ex.getMessage()));
-    }
 
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ApiResponse> handleRuntimeException(HttpStatus status, RuntimeException ex) {
-        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Map<String,String>>> handleValidationErrors(MethodArgumentNotValidException ex){
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getFieldErrors().forEach(error->
-                errors.put(error.getField(),error.getDefaultMessage()));
+    public ResponseEntity<ApiResponse<Object>> handleRuntimeException(RuntimeException ex) {
         return ResponseEntity
-                .badRequest()
-                .body(ApiResponse.failureInValidation("Validation failed",errors));
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.failure(ex.getMessage()));
+    }
+
+    // Handles @Valid failures for @RequestBody
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleMethodArgNotValid(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach(error ->
+                errors.put(error.getField(), error.getDefaultMessage()));
+        return ResponseEntity.badRequest().body(ApiResponse.failureInValidation("Validation failed", errors));
+    }
+
+    // Handles @Valid failures for @ModelAttribute
+    // Handles @Valid failures for @RequestPart and @RequestParam in Spring 6+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleHandlerMethodValidationException(HandlerMethodValidationException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getAllErrors().forEach(error -> {
+            if (error instanceof FieldError fieldError) {
+                String field = fieldError.getField();
+                String message = fieldError.getDefaultMessage();
+                errors.put(field, message);
+            } else {
+                errors.put("error", error.getDefaultMessage());
+            }
+        });
+
+
+        return ResponseEntity.badRequest().body(ApiResponse.failureInValidation("Pet Data Validation failed", errors));
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<ApiResponse<String>> handleMissingPart(MissingServletRequestPartException ex) {
+        return ResponseEntity.badRequest().body(ApiResponse.failure("Missing part: " + ex.getRequestPartName()));
     }
 
 
-    private ResponseEntity<ApiResponse> buildResponse(HttpStatus status, String message) {
-       return ResponseEntity.status(status.value()).body(ApiResponse.failure(message));
+    @ExceptionHandler(BindException.class)
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleBindException(BindException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach(error ->
+                errors.put(error.getField(), error.getDefaultMessage()));
+        return ResponseEntity.badRequest().body(ApiResponse.failureInValidation("Validation failed", errors));
     }
+
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Object>> handleIllegalParams(IllegalArgumentException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.failure(ex.getMessage()));
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUserNotFound(UserNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.failure(ex.getMessage()));
+    }
+
+    @ExceptionHandler(ImageUploadException.class)
+    public ResponseEntity<ApiResponse<Object>> handleImageUploadException(ImageUploadException ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.failure(ex.getMessage()));
+    }
+
+    @ExceptionHandler(PetListingNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handlePetListingNotFound(PetListingNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.failure(ex.getMessage()));
+    }
+
+    @ExceptionHandler(UnauthorizedUserException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUnauthorizedAccess(UnauthorizedUserException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.failure(ex.getMessage()));
+    }
+
+    //------------------------------------------------------------------------JWT ERRORS------------------------------------------------------------------------//
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<ApiResponse<Object>> handleJwtException(JwtException ex) {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.failure("JWT error: " + ex.getMessage()));
+    }
+
+    @ExceptionHandler(RefreshFailedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleRefreshFailed(RefreshFailedException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.failure(ex.getMessage()));
+    }
+
+
 }

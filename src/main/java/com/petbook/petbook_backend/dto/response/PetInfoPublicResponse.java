@@ -21,6 +21,7 @@ public class PetInfoPublicResponse {
     private List<String> imageUrls;
     private boolean adopted = false;
     private String owner;
+    private String description;
 
     public PetInfoPublicResponse(Pet post) {
         this.name = post.getName();
@@ -30,6 +31,7 @@ public class PetInfoPublicResponse {
         this.imageUrls = post.getImageUrls();
         this.adopted = post.isAdopted();
         this.owner = post.getOwner().getEmail();
+        this.description = post.getDescription();
     }
 
 
@@ -42,7 +44,8 @@ public class PetInfoPublicResponse {
                 pet.getLocation(),
                 pet.getImageUrls(),
                 pet.isAdopted(),
-                pet.getOwner().getEmail()
+                pet.getOwner().getEmail(),
+                pet.getDescription()
         );
     }
 

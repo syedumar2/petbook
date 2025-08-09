@@ -5,8 +5,10 @@ import lombok.Setter;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
+
 @Getter
 @Setter
+
 public class PageResponse<T> {
     private List<T> content;
     private int pageNumber;
@@ -22,5 +24,9 @@ public class PageResponse<T> {
         this.totalElements = page.getTotalElements();
         this.totalPages = page.getTotalPages();
         this.last = page.isLast();
+    }
+
+    public PageResponse() {
+
     }
 }

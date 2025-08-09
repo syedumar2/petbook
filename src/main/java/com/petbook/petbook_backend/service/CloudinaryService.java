@@ -2,6 +2,7 @@ package com.petbook.petbook_backend.service;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.petbook.petbook_backend.exceptions.ImageUploadException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,7 +28,7 @@ public class CloudinaryService {
 
             return uploadResult.get("secure_url").toString();
         } catch (IOException e) {
-            throw new RuntimeException("Image upload failed", e);
+            throw new ImageUploadException("Image upload failed", e);
         }
     }
 }

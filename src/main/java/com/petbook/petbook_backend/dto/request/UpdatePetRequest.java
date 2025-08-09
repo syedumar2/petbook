@@ -21,7 +21,8 @@ public class UpdatePetRequest {
     private String breed;
     private String location;
     private List<String> imageUrls;
-    private boolean adopted;
+    private Boolean adopted;
+    private String description;
 
 
 

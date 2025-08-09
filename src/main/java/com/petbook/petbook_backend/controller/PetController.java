@@ -1,6 +1,7 @@
 package com.petbook.petbook_backend.controller;
 
 
+import com.petbook.petbook_backend.dto.request.FindPetByExampleRequest;
 import com.petbook.petbook_backend.dto.response.ApiResponse;
 import com.petbook.petbook_backend.dto.response.PageResponse;
 import com.petbook.petbook_backend.dto.response.PetInfoPublicResponse;
@@ -29,19 +30,61 @@ public class PetController {
 
     @GetMapping("/pets/get/{field}")
     public ResponseEntity<ApiResponse<List<PetInfoPublicResponse>>> getPetswithSort(@PathVariable String field) {
+
         List<PetInfoPublicResponse> list = petService.getPetsWithSorting(field);
         return ResponseEntity.ok(ApiResponse.successWithCount(list.size(), "Sorted Pet listing", list));
 
     }
 
     @GetMapping("/pets/get/page")
-    public ResponseEntity<ApiResponse<PageResponse<PetInfoPublicResponse>>> getPetswithPagination(@RequestParam(value = "page", defaultValue = "0") int page, @RequestParam(value = "size", defaultValue = "20") int size
+    public ResponseEntity<ApiResponse<PageResponse<PetInfoPublicResponse>>> getPetswithPagination(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size
 
     ) {
         PageResponse<PetInfoPublicResponse> pets = petService.getPetsWithPagination(page, size);
         return ResponseEntity.ok(ApiResponse.successWithCount(pets.getPageSize(), "Pet listing with Pagination", pets));
 
     }
+
+    @GetMapping("/pets/get/page-sort")
+    public ResponseEntity<ApiResponse<PageResponse<PetInfoPublicResponse>>> getPetsWithPaginationAndSorting(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortField", defaultValue = "name") String sortField,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection
+    ) {
+        PageResponse<PetInfoPublicResponse> pets = petService.getPetsWithPaginationAndSorting(page, size, sortField, sortDirection);
+        return ResponseEntity.ok(ApiResponse.successWithCount(
+                pets.getPageSize(),
+                "Pet listing with Pagination and Sorting",
+                pets
+        ));
+    }
+
+
+
+
+
+    @GetMapping("/pets/search")
+    public ResponseEntity<ApiResponse<List<PetInfoPublicResponse>>> searchPets(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String breed,
+            @RequestParam(required = false) String location
+    ){
+        List<PetInfoPublicResponse> response = petService.searchPets(name,type,breed,location);
+        return ResponseEntity.ok(ApiResponse.successWithCount(response.size(),"Search successful",response));
+    }
+
+
+
+    @PostMapping("/pets/get")
+    public ResponseEntity<ApiResponse<List<PetInfoPublicResponse>>> findPetsByExample (@RequestBody FindPetByExampleRequest request){
+        List<PetInfoPublicResponse> response = petService.findPetsByExample(request);
+        return ResponseEntity.ok(ApiResponse.successWithCount(response.size(), "Query successful",response));
+    }
+
 
 
 }

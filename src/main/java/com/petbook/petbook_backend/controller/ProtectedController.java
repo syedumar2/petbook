@@ -3,15 +3,17 @@ package com.petbook.petbook_backend.controller;
 
 import com.petbook.petbook_backend.dto.request.AddPetRequest;
 import com.petbook.petbook_backend.dto.request.UpdatePetRequest;
+import com.petbook.petbook_backend.dto.request.UpdateUserRequest;
 import com.petbook.petbook_backend.dto.response.ApiResponse;
 import com.petbook.petbook_backend.dto.response.PetInfoPrivateResponse;
+import com.petbook.petbook_backend.dto.response.UserDetailsResponse;
 import com.petbook.petbook_backend.dto.response.UserInfoResponse;
 import com.petbook.petbook_backend.service.CloudinaryService;
 import com.petbook.petbook_backend.service.PetService;
+import com.petbook.petbook_backend.service.UserServiceImpl;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,6 +31,7 @@ public class ProtectedController {
 
     private final PetService petService;
     private final CloudinaryService cloudinaryService;
+    private final UserServiceImpl userService;
 
     @GetMapping("/user/me")
     public ResponseEntity<ApiResponse<UserInfoResponse>> userEndpoint() {
@@ -43,7 +46,7 @@ public class ProtectedController {
 
     }
 
-    //TODO Test validation
+
     @PostMapping(value = "/user/me/pets", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<PetInfoPrivateResponse>> addPet(@Valid @RequestPart("petData") AddPetRequest request, @Valid @RequestPart("images") List<MultipartFile> images) {
 
@@ -81,12 +84,31 @@ public class ProtectedController {
 
     }
 
+    //Profile update controller
+    @PatchMapping(value = "/user/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<UserDetailsResponse>> updateUser(@RequestPart("userData") UpdateUserRequest request,
+                                                                       @RequestPart(value = "imageUrl", required = false) MultipartFile image
+                                                                    ){
+
+        if (image != null && !image.isEmpty() ) {
+            String imageUrls = cloudinaryService.uploadFile(image);
+            request.setProfileImageUrl(imageUrls);
+        }
+        UserDetailsResponse response = userService.updateUser(request);
+        return ResponseEntity.ok(ApiResponse.success("Updated Profile Data",response));
+    }
+
+
 
 }
-//TODO advanced search q with filters
+//TODO write controller and
 //TODO write repo tests
-//TODO write controller tests
+//TODO integration tests and apis
+//TODO test user profile update function
+
 //TODO websockets
+
+//TODO build frontend
 //TODO admin dashboard and verification (might need more overhaul)
 
 

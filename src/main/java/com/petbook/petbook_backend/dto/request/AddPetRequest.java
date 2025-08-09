@@ -22,10 +22,11 @@ public class AddPetRequest {
     @NotBlank(message = "Pet Type is required")
     private String type;
     private String breed;
+    private String description;
     @NotBlank(message = "Pet location is required")
     private String location;
-    @NotEmpty(message = "Image URLs must not be empty")
-    private List<@NotBlank(message = "Each image URL must not be blank") String> imageUrls;// Updated from single String to List
+
+    private List<String> imageUrls;// Updated from single String to List
     private User owner;
 
 

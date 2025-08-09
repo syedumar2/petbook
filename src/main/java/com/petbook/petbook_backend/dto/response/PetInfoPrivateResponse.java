@@ -19,5 +19,7 @@ public class PetInfoPrivateResponse {
     private List<String> imageUrls;
     private boolean adopted = false;
     private String owner;
+    private String description;
+    private Boolean approved;
 
 }

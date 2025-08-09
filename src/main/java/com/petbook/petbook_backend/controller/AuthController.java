@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.security.auth.RefreshFailedException;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/auth")
@@ -53,9 +55,14 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Success",response));
 
     }
+    @PostMapping("/admin/register")
+    public ResponseEntity<ApiResponse<String>> createAdmin(@RequestBody RegisterRequest request) {
+        String response = authService.adminRegister(request);
+        return ResponseEntity.ok(ApiResponse.success("Success",response));
+    }
 
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<AuthResponse>> refreshToken(HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<AuthResponse>> refreshToken(HttpServletRequest request) throws RefreshFailedException {
         String refreshToken = null;
         for (Cookie cookie : request.getCookies()) {
             if ("refreshToken".equals(cookie.getName())) {

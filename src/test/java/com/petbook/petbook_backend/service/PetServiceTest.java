@@ -70,7 +70,7 @@ class PetServiceTest {
         request.setType("Dog");
         request.setBreed("Labrador");
         request.setLocation("Delhi");
-        request.setImageUrls(new ArrayList<>(Arrays.asList("https://image.com/leo.jpg","https://image.com/leo.jpg")));
+        request.setImageUrls(new ArrayList<>(Arrays.asList("https://image.com/leo.jpg", "https://image.com/leo.jpg")));
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
 
@@ -80,7 +80,7 @@ class PetServiceTest {
         savedPet.setType("Dog");
         savedPet.setBreed("Labrador");
         savedPet.setLocation("Delhi");
-        savedPet.setImageUrls(new ArrayList<>(Arrays.asList("https://image.com/leo.jpg","https://image.com/leo.jpg")));
+        savedPet.setImageUrls(new ArrayList<>(Arrays.asList("https://image.com/leo.jpg", "https://image.com/leo.jpg")));
         savedPet.setOwner(user);
         savedPet.setAdopted(false);
 
@@ -151,8 +151,8 @@ class PetServiceTest {
         //given
 
         User user = new User();
-        Pet pet1 = new Pet(1L, "Doggo", "Dog", "Labrador", "Hyderabad", new ArrayList<>(List.of("url1")) , false, user);
-        Pet pet2 = new Pet(2L, "Kitty", "Cat", "Persian", "Delhi", new ArrayList<>(List.of("url2")), true, user);
+        Pet pet1 = Pet.builder().id(1L).name("Doggo").type("Dog").breed("Labrador").location("Hyderabad").imageUrls(new ArrayList<>(List.of("url1"))).adopted(false).owner(user).build();
+        Pet pet2 = Pet.builder().id(2L).name("Kitty").type("Cat").breed("Persian").location("Delhi").imageUrls(new ArrayList<>(List.of("url2"))).adopted(true).owner(user).build();
         List<Pet> mockPets = List.of(pet1, pet2);
         when(petRepository.findAll()).thenReturn(mockPets);
         //when
@@ -184,8 +184,9 @@ class PetServiceTest {
         user.setEmail(email);
         user.setId(1L);
 
-        Pet pet1 = new Pet(1L, "Doggo", "Dog", "Labrador", "Hyderabad", new ArrayList<>(List.of("url1")), false, user);
-        Pet pet2 = new Pet(2L, "Kitty", "Cat", "Persian", "Delhi",  new ArrayList<>(List.of("url2")), true, user);
+        Pet pet1 = Pet.builder().id(1L).name("Doggo").type("Dog").breed("Labrador").location("Hyderabad").imageUrls(new ArrayList<>(List.of("url1"))).adopted(false).owner(user).build();
+        Pet pet2 = Pet.builder().id(2L).name("Kitty").type("Cat").breed("Persian").location("Delhi").imageUrls(new ArrayList<>(List.of("url2"))).adopted(true).owner(user).build();
+
 
         //when
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
@@ -346,7 +347,7 @@ class PetServiceTest {
         pet.setType("Dog");
         pet.setBreed("Labrador");
         pet.setLocation("Delhi");
-        pet.setImageUrls(new ArrayList<>(Arrays.asList("https://image.com/leo.jpg","https://image.com/leo.jpg")));
+        pet.setImageUrls(new ArrayList<>(Arrays.asList("https://image.com/leo.jpg", "https://image.com/leo.jpg")));
         pet.setOwner(user);
         pet.setAdopted(false);
 
@@ -456,7 +457,7 @@ class PetServiceTest {
         savedPet.setType("Dog");
         savedPet.setBreed("Labrador");
         savedPet.setLocation("Delhi");
-        savedPet.setImageUrls(new ArrayList<>(Arrays.asList("https://image.com/leo.jpg","https://image.com/leo.jpg")));
+        savedPet.setImageUrls(new ArrayList<>(Arrays.asList("https://image.com/leo.jpg", "https://image.com/leo.jpg")));
         savedPet.setOwner(user1);
         savedPet.setAdopted(false);
 
@@ -494,7 +495,7 @@ class PetServiceTest {
         mockPet.setType("Dog");
         mockPet.setBreed("Labrador");
         mockPet.setLocation("Delhi");
-        mockPet.setImageUrls(new ArrayList<>(Arrays.asList("https://image.com/leo.jpg","https://image.com/leo.jpg")));
+        mockPet.setImageUrls(new ArrayList<>(Arrays.asList("https://image.com/leo.jpg", "https://image.com/leo.jpg")));
         mockPet.setOwner(user);
         mockPet.setAdopted(false);
 
@@ -504,7 +505,7 @@ class PetServiceTest {
         BDDMockito.given(petRepository.findById(petId)).willReturn(Optional.of(mockPet));
 
         //when
-        PetInfoPrivateResponse response = underTest.deletePetPost(petId);
+        underTest.deletePetPost(petId);
 
         //then
         verify(petRepository).delete(mockPet);
@@ -536,7 +537,7 @@ class PetServiceTest {
         mockPet.setType("Dog");
         mockPet.setBreed("Labrador");
         mockPet.setLocation("Delhi");
-        mockPet.setImageUrls(new ArrayList<>(Arrays.asList("https://image.com/leo.jpg","https://image.com/leo.jpg")));
+        mockPet.setImageUrls(new ArrayList<>(Arrays.asList("https://image.com/leo.jpg", "https://image.com/leo.jpg")));
         mockPet.setOwner(user1);
         mockPet.setAdopted(false);
 

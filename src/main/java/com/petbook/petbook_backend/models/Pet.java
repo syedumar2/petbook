@@ -4,6 +4,7 @@ package com.petbook.petbook_backend.models;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -28,6 +29,10 @@ public class Pet {
     @Column(nullable = false)
     private String location;
 
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
     //Learn this in depth later
     @ElementCollection
     @CollectionTable(name = "pet_images",joinColumns = @JoinColumn(name = "pet_id"))
@@ -39,5 +44,11 @@ public class Pet {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")
     private User owner;
+
+    @Column(nullable = false)
+    private boolean approved = false;
+
+    private LocalDateTime approvedAt;
+    private LocalDateTime rejectedAt;
 
 }
