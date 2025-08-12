@@ -33,7 +33,7 @@ CREATE TABLE pets (
     location VARCHAR(255) NOT NULL,
     description TEXT,
     adopted BOOLEAN NOT NULL DEFAULT FALSE,
-    approved BOOLEAN NOT NULL DEFAULT FALSE,
+    approved BOOLEAN NOT NULL DEFAULT TRUE,
     approved_at TIMESTAMP NULL;
     rejected_at TIMESTAMP NULL;
     owner_id BIGINT,
@@ -50,9 +50,10 @@ CREATE INDEX idx_pets_owner_approved ON pets (owner_id, approved);
 -- PET IMAGES TABLE
 -- ======================
 CREATE TABLE pet_images (
-    pet_id BIGINT NOT NULL,
-    image_url VARCHAR(500) NOT NULL,
-    CONSTRAINT fk_pet_images_pet FOREIGN KEY (pet_id) REFERENCES pets (id)
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+       url VARCHAR(1024) NOT NULL,
+       pet_id BIGINT NOT NULL,
+    CONSTRAINT fk_pet_images_pet FOREIGN KEY (pet_id) REFERENCES pets (id) ON DELETE CASCADE
 );
 
 CREATE INDEX idx_pet_images_pet_id ON pet_images (pet_id);

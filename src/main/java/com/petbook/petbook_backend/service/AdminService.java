@@ -8,6 +8,7 @@ import com.petbook.petbook_backend.repository.PetRepository;
 import com.petbook.petbook_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,6 +20,7 @@ public class AdminService {
     private final UserRepository userRepository;
     private final PetRepository petRepository;
 
+    @Transactional
     public List<PetInfoPrivateResponse> getApprovedPets() {
         return petRepository.findByApproved(true)
                 .stream()
@@ -26,6 +28,7 @@ public class AdminService {
                 .toList();
     }
 
+    @Transactional
     public List<PetInfoPrivateResponse> getUnapprovedPets() {
         return petRepository.findByApproved(false)
                 .stream()
@@ -33,9 +36,13 @@ public class AdminService {
                 .toList();
     }
 
+    @Transactional
     public PetInfoPrivateResponse approvePet(Long petId) {
         Pet pet = petRepository.findById(petId)
                 .orElseThrow(() -> new RuntimeException("Pet not found"));
+        if (pet.isApproved()) {
+            throw new IllegalArgumentException("Already approved");
+        }
         pet.setApproved(true);
         pet.setApprovedAt(LocalDateTime.now());
         pet.setRejectedAt(null);
@@ -43,14 +50,15 @@ public class AdminService {
         return mapToPetInfoPrivateResponse(pet);
     }
 
+    @Transactional
     public PetInfoPrivateResponse rejectPet(Long petId) {
         Pet pet = petRepository.findById(petId)
                 .orElseThrow(() -> new RuntimeException("Pet not found"));
-
         pet.setRejectedAt(LocalDateTime.now());
         return mapToPetInfoPrivateResponse(pet);
     }
 
+    @Transactional
     public List<UserDetailsResponse> getAllUsers() {
         return userRepository.findAll()
                 .stream()
@@ -69,6 +77,8 @@ public class AdminService {
                 .adopted(pet.isAdopted())
                 .approved(pet.isApproved())
                 .owner(pet.getOwner() != null ? pet.getOwner().getEmail() : null)
+                .approvedAt(pet.getApprovedAt())
+                .rejectedAt(pet.getRejectedAt())
                 .build();
     }
 

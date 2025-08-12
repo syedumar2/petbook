@@ -1,5 +1,6 @@
 package com.petbook.petbook_backend.dto.response;
 
+import com.petbook.petbook_backend.models.ImageUrl;
 import com.petbook.petbook_backend.models.Pet;
 import lombok.*;
 
@@ -28,7 +29,7 @@ public class PetInfoPublicResponse {
         this.type = post.getType();
         this.breed = post.getBreed();
         this.location = post.getLocation();
-        this.imageUrls = post.getImageUrls();
+        this.imageUrls = post.getImages().stream().map(ImageUrl::getUrl).toList();
         this.adopted = post.isAdopted();
         this.owner = post.getOwner().getEmail();
         this.description = post.getDescription();
@@ -42,7 +43,7 @@ public class PetInfoPublicResponse {
                 pet.getType(),
                 pet.getBreed(),
                 pet.getLocation(),
-                pet.getImageUrls(),
+                pet.getImages().stream().map(ImageUrl::getUrl).toList(),
                 pet.isAdopted(),
                 pet.getOwner().getEmail(),
                 pet.getDescription()

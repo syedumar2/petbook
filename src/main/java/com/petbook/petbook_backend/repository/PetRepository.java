@@ -1,6 +1,8 @@
 package com.petbook.petbook_backend.repository;
 
 import com.petbook.petbook_backend.models.Pet;
+import org.springframework.data.domain.Example;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.query.QueryByExampleExecutor;
@@ -15,6 +17,10 @@ public interface PetRepository extends JpaRepository<Pet,Long>, QueryByExampleEx
     List<Pet> findByOwnerId(Long ownerId);
     Optional<Pet> findById(Long id);
     List<Pet> findByApproved(boolean approved);
+
+    @Override
+    @EntityGraph(attributePaths = {"images","owner"})
+    <S extends Pet> List<S> findAll(Example<S> example);
 
 
 

@@ -36,10 +36,10 @@ public class AdminController {
         return ApiResponse.success("Pet approved successfully", pet);
     }
 
-    @DeleteMapping("/pets/{petId}/reject")
+    @PostMapping("/pets/{petId}/reject")
     public ApiResponse<PetInfoPrivateResponse> rejectPet(@PathVariable Long petId) {
         PetInfoPrivateResponse pet = adminService.rejectPet(petId);
-        return ApiResponse.success("Pet rejected and deleted successfully", pet);
+        return ApiResponse.success("Pet rejected successfully", pet);
     }
 
     @GetMapping("/users")
@@ -47,4 +47,11 @@ public class AdminController {
         List<UserDetailsResponse> users = adminService.getAllUsers();
         return ApiResponse.successWithCount(users.size(), "Users fetched successfully", users);
     }
+
+
+    //In the future build some admin endpoints to allow blacklisting users
+    //allow deletion of users
+    //for now all current version api endpoints behave as expected ✅
+    //TODO write units tests
+    //TODO further enhancement
 }

@@ -3,8 +3,6 @@ package com.petbook.petbook_backend.controller;
 import com.petbook.petbook_backend.dto.request.AddPetRequest;
 import com.petbook.petbook_backend.dto.request.UpdatePetRequest;
 import com.petbook.petbook_backend.dto.response.PetInfoPrivateResponse;
-import com.petbook.petbook_backend.dto.response.PetInfoPublicResponse;
-import com.petbook.petbook_backend.models.Role;
 import com.petbook.petbook_backend.service.CloudinaryService;
 import com.petbook.petbook_backend.service.JwtService;
 import com.petbook.petbook_backend.service.PetService;
@@ -22,8 +20,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.testcontainers.shaded.com.fasterxml.jackson.core.JsonProcessingException;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Collections;
@@ -37,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(ProtectedController.class)
+@WebMvcTest(UserController.class)
 public class ProtectedControllerTest {
 
     @Autowired
@@ -270,7 +266,7 @@ public class ProtectedControllerTest {
 
 
     @Test
-    void updatePet_success() throws JsonProcessingException {
+    void updatePet_success() throws Exception {
 
         UserDetails userDetails = new User("test@example.com", "password", Collections.singletonList(() -> "ROLE_USER"));
         Authentication authentication = mock(Authentication.class);
@@ -331,7 +327,7 @@ public class ProtectedControllerTest {
                 .andExpect(jsonPath("$.data.imageUrls[0]").value("https://mock.cloudinary.com/coco.jpg"))
                 .andExpect(jsonPath("$.data.owner").value("test@example.com"));
     }
-    }
+
 
     @Test
     void updatePet_Failure_when_pet_Doesnt_Exist() {

@@ -1,25 +1,23 @@
-package com.petbook.petbook_backend.exceptions;
+package com.petbook.petbook_backend.exceptions.rest;
 
 import com.petbook.petbook_backend.dto.response.ApiResponse;
 import io.jsonwebtoken.JwtException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
-import org.springframework.validation.BindException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
-
 import javax.security.auth.RefreshFailedException;
-
 import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
-public class GlobalExceptionHandler {
+public class GlobalRestExceptionHandler {
 
 
     @ExceptionHandler(Exception.class)
@@ -124,5 +122,19 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.failure(ex.getMessage()));
     }
 
+    @ExceptionHandler(ChatAccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleChatAccessDenied(ChatAccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.failure(ex.getMessage()));
+    }
+
+    @ExceptionHandler(ConversationNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleConversationNotFound(ConversationNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.failure(ex.getMessage()));
+
+
+    }
 
 }

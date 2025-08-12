@@ -8,6 +8,7 @@ import com.petbook.petbook_backend.dto.response.ApiResponse;
 import com.petbook.petbook_backend.dto.response.PetInfoPrivateResponse;
 import com.petbook.petbook_backend.dto.response.UserDetailsResponse;
 import com.petbook.petbook_backend.dto.response.UserInfoResponse;
+import com.petbook.petbook_backend.models.User;
 import com.petbook.petbook_backend.service.CloudinaryService;
 import com.petbook.petbook_backend.service.PetService;
 import com.petbook.petbook_backend.service.UserServiceImpl;
@@ -27,7 +28,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
-public class ProtectedController {
+public class UserController {
 
     private final PetService petService;
     private final CloudinaryService cloudinaryService;
@@ -36,7 +37,16 @@ public class ProtectedController {
     @GetMapping("/user/me")
     public ResponseEntity<ApiResponse<UserInfoResponse>> userEndpoint() {
         UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return ResponseEntity.ok(ApiResponse.success("Profile Details received", new UserInfoResponse(userDetails.getUsername(), userDetails.getAuthorities())));
+        User user = userService.findByEmail(userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.success("Profile Details received", UserInfoResponse.builder()
+                .email(userDetails.getUsername())
+                .firstname(user.getFirstname())
+                .lastname(user.getLastname())
+                .roles(userDetails.getAuthorities())
+                .createdAt(user.getCreatedAt())
+                .profileImageUrl(user.getProfileImageUrl())
+                .location(user.getLocation())
+                .build()));
     }
 
     @GetMapping("/user/me/pets")
@@ -101,14 +111,5 @@ public class ProtectedController {
 
 
 }
-//TODO write controller and
-//TODO write repo tests
-//TODO integration tests and apis
-//TODO test user profile update function
 
-//TODO websockets
-
-//TODO build frontend
-//TODO admin dashboard and verification (might need more overhaul)
-
-
+//ALL ENDPOINTS WORKING AS EXPECTED ✅

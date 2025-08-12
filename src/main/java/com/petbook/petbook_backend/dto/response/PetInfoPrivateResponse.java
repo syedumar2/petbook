@@ -3,6 +3,7 @@ package com.petbook.petbook_backend.dto.response;
 
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -21,5 +22,7 @@ public class PetInfoPrivateResponse {
     private String owner;
     private String description;
     private Boolean approved;
+    private LocalDateTime approvedAt;
+    private LocalDateTime rejectedAt;
 
 }

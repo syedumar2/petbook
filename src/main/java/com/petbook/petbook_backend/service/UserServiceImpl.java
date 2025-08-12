@@ -2,7 +2,7 @@ package com.petbook.petbook_backend.service;
 
 import com.petbook.petbook_backend.dto.request.UpdateUserRequest;
 import com.petbook.petbook_backend.dto.response.UserDetailsResponse;
-import com.petbook.petbook_backend.exceptions.UserNotFoundException;
+import com.petbook.petbook_backend.exceptions.rest.UserNotFoundException;
 import com.petbook.petbook_backend.models.User;
 import com.petbook.petbook_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -42,12 +42,33 @@ public class UserServiceImpl implements UserDetailsService {
         }
 
         if (request.getPassword() != null)
-            user.setPassword(passwordEncoder.encode(request.getPassword())); // Consider hashing this!
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
         if (request.getLocation() != null) user.setLocation(request.getLocation());
         if (request.getProfileImageUrl() != null) user.setProfileImageUrl(request.getProfileImageUrl());
         ;
         User newUserDetails = userRepository.save(user);
-        return UserDetailsResponse.builder().firstname(newUserDetails.getFirstname()).lastname(newUserDetails.getLastname()).email(newUserDetails.getEmail()).location(newUserDetails.getLocation()).profileImageUrl(newUserDetails.getProfileImageUrl()).build();
+        return UserDetailsResponse.builder()
+                .role(newUserDetails.getRole())
+                .id(newUserDetails.getId())
+                .createdAt(newUserDetails.getCreatedAt())
+                .firstname(newUserDetails.getFirstname())
+                .lastname(newUserDetails.getLastname())
+                .email(newUserDetails.getEmail())
+                .location(newUserDetails.getLocation())
+                .profileImageUrl(newUserDetails.getProfileImageUrl())
+                .build();
 
+    }
+
+    public User loadUserById(Long id){
+        return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found"));
+    }
+    public Long findUserId(String username)
+    {
+        return userRepository.findByEmail(username).orElseThrow(()-> new UserNotFoundException("User not found")).getId();
+    }
+
+    public User findByEmail(String username) {
+        return userRepository.findByEmail(username).orElseThrow(()->new UserNotFoundException("User not found"));
     }
 }

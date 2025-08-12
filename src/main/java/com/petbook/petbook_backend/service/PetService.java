@@ -7,20 +7,22 @@ import com.petbook.petbook_backend.dto.request.UpdatePetRequest;
 import com.petbook.petbook_backend.dto.response.PageResponse;
 import com.petbook.petbook_backend.dto.response.PetInfoPrivateResponse;
 import com.petbook.petbook_backend.dto.response.PetInfoPublicResponse;
-import com.petbook.petbook_backend.exceptions.PetListingNotFoundException;
-import com.petbook.petbook_backend.exceptions.UnauthorizedUserException;
-import com.petbook.petbook_backend.exceptions.UserNotFoundException;
+import com.petbook.petbook_backend.exceptions.rest.PetListingNotFoundException;
+import com.petbook.petbook_backend.exceptions.rest.UnauthorizedUserException;
+import com.petbook.petbook_backend.exceptions.rest.UserNotFoundException;
+import com.petbook.petbook_backend.models.ImageUrl;
 import com.petbook.petbook_backend.models.Pet;
 import com.petbook.petbook_backend.models.User;
+import com.petbook.petbook_backend.repository.PetImageUrlsRepository;
 import com.petbook.petbook_backend.repository.PetRepository;
 import com.petbook.petbook_backend.repository.UserRepository;
+import jakarta.persistence.EntityManager;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,23 +33,77 @@ public class PetService {
 
     private final UserRepository userRepository;
     private final PetRepository petRepository;
+    private final PetImageUrlsRepository petImageUrlsRepository;
+    private final EntityManager entityManager;
 
+    @Transactional
+    public PetInfoPrivateResponse updatePetPost(UpdatePetRequest request, long petId) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+        String email = user.getEmail();
+
+        Pet pet = petRepository.findById(petId)
+                .orElseThrow(() -> new PetListingNotFoundException("Listing not found:" + petId));
+
+        if (!pet.getOwner().getEmail().equals(user.getEmail())) {
+            throw new UnauthorizedUserException("Pet Listing is not owned by User");
+        }
+
+
+        applyUpdates(pet, request);
+        Pet updatedPet = petRepository.save(pet);
+        List<ImageUrl> imageUrls  = new ArrayList<>();
+        if (request.getImageUrls() != null) {
+         imageUrls = new ArrayList<>(request.getImageUrls().stream().map(s -> ImageUrl.builder()
+                    .url(s)
+                    .pet(updatedPet)
+                    .build()).toList());
+            pet.getImages().clear();
+            pet.getImages().addAll(imageUrls);
+            petImageUrlsRepository.saveAll(imageUrls);
+        }
+
+        return PetInfoPrivateResponse.builder()
+                .id(pet.getId())
+                .name(pet.getName())
+                .type(pet.getType())
+                .breed(pet.getBreed())
+                .location(pet.getLocation())
+                .imageUrls(imageUrls.stream().map(ImageUrl::getUrl).toList())
+                .adopted(pet.isAdopted())
+                .owner(email)
+                .description(pet.getDescription())
+                .build();
+
+    }
+
+    @Transactional
     public PetInfoPrivateResponse addPetPost(AddPetRequest request) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(username).orElseThrow(() -> new UserNotFoundException("User not found"));
         request.setOwner(user);
         String email = user.getEmail();
 
+
         Pet savedPet = petRepository.save(Pet.builder()
                 .name(request.getName())
                 .type(request.getType())
                 .breed(request.getBreed())
                 .location(request.getLocation())
-                .imageUrls(request.getImageUrls())
                 .description(request.getDescription())
                 .owner(request.getOwner())
+                .approved(true)
                 .build());
 
+        List<ImageUrl> imageUrls = request.getImageUrls().stream()
+                .map(url -> ImageUrl.builder()
+                        .pet(savedPet) // ✅ savedPet already has ID
+                        .url(url)
+                        .build())
+                .toList();
+
+        petImageUrlsRepository.saveAll(imageUrls);
 
         return PetInfoPrivateResponse.builder()
                 .id(savedPet.getId())
@@ -55,7 +111,7 @@ public class PetService {
                 .type(savedPet.getType())
                 .breed(savedPet.getBreed())
                 .location(savedPet.getLocation())
-                .imageUrls(savedPet.getImageUrls())
+                .imageUrls(imageUrls.stream().map(ImageUrl::getUrl).toList())
                 .adopted(savedPet.isAdopted())
                 .owner(email)
                 .description(savedPet.getDescription())
@@ -64,6 +120,7 @@ public class PetService {
 
     }
 
+    @Transactional(readOnly = true)
     public List<PetInfoPrivateResponse> getUserPets() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(username).orElseThrow(() -> new UserNotFoundException("User not found"));
@@ -75,7 +132,7 @@ public class PetService {
                 .type(p.getType())
                 .breed(p.getBreed())
                 .location(p.getLocation())
-                .imageUrls(p.getImageUrls())
+                .imageUrls(p.getImages().stream().map(ImageUrl::getUrl).toList())
                 .adopted(p.isAdopted())
                 .description(p.getDescription())
                 .owner(email)
@@ -90,7 +147,7 @@ public class PetService {
                 .findByApproved(true)
                 .forEach(p -> {
 
-                    List<String> urls = new ArrayList<>(p.getImageUrls());
+                    List<String> urls = new ArrayList<>(p.getImages().stream().map(ImageUrl::getUrl).toList());
 
                     list.add(PetInfoPublicResponse.builder()
                             .name(p.getName())
@@ -108,25 +165,31 @@ public class PetService {
 
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<PetInfoPublicResponse> getPetsWithSorting(String field) {
         List<String> allowedFields = List.of("name", "type", "breed", "location", "adopted");
         if (!allowedFields.contains(field)) {
             throw new IllegalArgumentException("Invalid sort field: " + field);
         }
 
+        List<Pet> pets = petRepository
+                .findAll(((root, query, criteriaBuilder) -> criteriaBuilder.isTrue(root.get("approved"))), Sort.by(Sort.Direction.ASC, field));
         List<PetInfoPublicResponse> list = new ArrayList<>();
-        petRepository.findAll((root,query,cb)->cb.isTrue(root.get("approved")),
-                Sort.by(Sort.Direction.ASC, field)).forEach(p -> list.add(PetInfoPublicResponse.builder()
-                .name(p.getName())
-                .type(p.getType())
-                .breed(p.getBreed())
-                .location(p.getLocation())
-                .imageUrls(p.getImageUrls())
-                .adopted(p.isAdopted())
-                .owner(p.getOwner().getEmail())
-                .description(p.getDescription())
-                .build()));
+        for (Pet p : pets) {
+            List<String> imageUrls = p.getImages().stream().map(ImageUrl::getUrl).toList();
+
+            String ownerEmail = (p.getOwner() != null) ? p.getOwner().getEmail() : null;
+            list.add(PetInfoPublicResponse.builder()
+                    .name(p.getName())
+                    .type(p.getType())
+                    .breed(p.getBreed())
+                    .location(p.getLocation())
+                    .imageUrls(imageUrls)
+                    .adopted(p.isAdopted())
+                    .owner(ownerEmail)
+                    .description(p.getDescription())
+                    .build());
+        }
         return list;
 
 
@@ -160,43 +223,10 @@ public class PetService {
     @Transactional
     public PageResponse<PetInfoPublicResponse> getPetsWithPagination(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<PetInfoPublicResponse> petsPage = petRepository.findAll((root,query,cb)->cb.isTrue(root.get("approved"))
-                ,pageable)
+        Page<PetInfoPublicResponse> petsPage = petRepository.findAll((root, query, cb) -> cb.isTrue(root.get("approved"))
+                        , pageable)
                 .map(PetInfoPublicResponse::fromEntity);
         return new PageResponse<>(petsPage);
-
-    }
-
-    @Transactional
-    public PetInfoPrivateResponse updatePetPost(UpdatePetRequest request, long petId) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByEmail(username)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
-        String email = user.getEmail();
-
-        Pet pet = petRepository.findById(petId)
-                .orElseThrow(() -> new PetListingNotFoundException("Listing not found:" + petId));
-
-        if (!pet.getOwner().getEmail().equals(user.getEmail())) {
-            throw new UnauthorizedUserException("Pet Listing is not owned by User");
-        }
-
-
-        applyUpdates(pet, request);
-        pet = petRepository.save(pet);
-
-
-        return PetInfoPrivateResponse.builder()
-                .id(pet.getId())
-                .name(pet.getName())
-                .type(pet.getType())
-                .breed(pet.getBreed())
-                .location(pet.getLocation())
-                .imageUrls(pet.getImageUrls())
-                .adopted(pet.isAdopted())
-                .owner(email)
-                .description(pet.getDescription())
-                .build();
 
     }
 
@@ -209,6 +239,7 @@ public class PetService {
 
         Pet pet = petRepository.findById(petId)
                 .orElseThrow(() -> new PetListingNotFoundException("Listing not found"));
+        List<String> imageUrls = pet.getImages().stream().map(ImageUrl::getUrl).toList();
 
         if (!pet.getOwner().getEmail().equals(user.getEmail())) {
             throw new UnauthorizedUserException("Pet Listing is not owned by User");
@@ -220,7 +251,7 @@ public class PetService {
                 .type(pet.getType())
                 .breed(pet.getBreed())
                 .location(pet.getLocation())
-                .imageUrls(pet.getImageUrls())
+                .imageUrls(imageUrls)
                 .adopted(pet.isAdopted())
                 .owner(email)
                 .build();
@@ -239,6 +270,7 @@ public class PetService {
                 .adopted(request.getAdopted() != null ? request.getAdopted() : false) // you can also skip this if null
                 .owner(request.getOwnerEmail() != null ?
                         User.builder().email(request.getOwnerEmail()).build() : null)
+                .approved(true)
                 .build();
         ExampleMatcher exampleMatcher = ExampleMatcher.matchingAll()
                 .withIgnoreNullValues()
@@ -260,6 +292,7 @@ public class PetService {
                 .type(type)
                 .breed(breed)
                 .location(location)
+                .approved(true)
                 .build();
 
         ExampleMatcher matcher = ExampleMatcher.matching()
@@ -280,8 +313,9 @@ public class PetService {
         if (request.getType() != null) pet.setType(request.getType());
         if (request.getBreed() != null) pet.setBreed(request.getBreed());
         if (request.getLocation() != null) pet.setLocation(request.getLocation());
-        if (request.getImageUrls() != null) pet.setImageUrls(request.getImageUrls());
         if (request.getDescription() != null) pet.setDescription(request.getDescription());
         if (request.getAdopted() != null) pet.setAdopted(request.getAdopted());
     }
 }
+
+

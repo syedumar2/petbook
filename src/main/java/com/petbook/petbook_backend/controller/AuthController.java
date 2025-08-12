@@ -86,4 +86,6 @@ public class AuthController {
 
     }
 
-}
+}//logout,login, register and refresh work
+// Main controllers are working as expected ✅
+//TODO refactor response dto to remove refreshToken field

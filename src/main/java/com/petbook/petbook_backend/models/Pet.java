@@ -33,11 +33,9 @@ public class Pet {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    //Learn this in depth later
-    @ElementCollection
-    @CollectionTable(name = "pet_images",joinColumns = @JoinColumn(name = "pet_id"))
-    @Column(name = "image_url")
-    private List<String> imageUrls;
+
+    @OneToMany(mappedBy = "pet", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ImageUrl> images;
 
     private boolean adopted = false;
 
@@ -46,7 +44,7 @@ public class Pet {
     private User owner;
 
     @Column(nullable = false)
-    private boolean approved = false;
+    private boolean approved = true;
 
     private LocalDateTime approvedAt;
     private LocalDateTime rejectedAt;

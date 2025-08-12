@@ -2,7 +2,7 @@ package com.petbook.petbook_backend.service;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import com.petbook.petbook_backend.exceptions.ImageUploadException;
+import com.petbook.petbook_backend.exceptions.rest.ImageUploadException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
