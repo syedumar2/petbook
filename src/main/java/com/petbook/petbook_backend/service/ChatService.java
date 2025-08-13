@@ -17,15 +17,19 @@ import com.petbook.petbook_backend.models.User;
 import com.petbook.petbook_backend.repository.ConversationRepository;
 import com.petbook.petbook_backend.repository.MessageRepository;
 import com.petbook.petbook_backend.repository.UserRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ChatService {
@@ -35,37 +39,51 @@ public class ChatService {
     private final SimpMessagingTemplate messagingTemplate;
     private final UserServiceImpl userService;
     private final UserRepository userRepository;
+    @PersistenceContext
+    private EntityManager entityManager;
 
+    @Transactional
     public ChatMessageResponse sendMessage(ChatMessageRequest request, Long authenticatedUserId) {
-        // Override senderId to ensure no impersonation
+        log.info("Endpoint hit {}", request);
+        log.info("SenderId: {}", authenticatedUserId);
+        log.info("ReceiverId: {}", request.getReceiverId());
+        log.info("ConversationId: {}", request.getConversationId());
+
+
+        // Always set senderId from authenticated user
         request.setSenderId(authenticatedUserId);
 
+        // Find conversation (throws if not found)
         Conversation conversation = conversationRepository.findById(request.getConversationId())
                 .orElseThrow(() -> new ConversationNotFoundException("Conversation not found"));
 
         validateParticipant(conversation, authenticatedUserId);
 
+        // Create message with lightweight entity references (no extra SELECTs)
         Message message = Message.builder()
-                .conversation(conversation)
-                .sender(User.builder().id(authenticatedUserId).build())
-                .receiver(User.builder().id(request.getReceiverId()).build())
+                .conversation(conversation) // already managed from findById
+                .sender(entityManager.getReference(User.class, authenticatedUserId))
+                .receiver(entityManager.getReference(User.class, request.getReceiverId()))
                 .content(request.getContent())
                 .isRead(false)
                 .sentAt(LocalDateTime.now())
                 .build();
 
         Message saved = messageRepository.save(message);
-
+        log.info("Saved Id is coming as {}", saved.getId());
         ChatMessageResponse response = new ChatMessageResponse(
                 saved.getId(),
-                saved.getSender().getId(),
-                saved.getReceiver().getId(),
+                authenticatedUserId,
+                request.getReceiverId(),
                 saved.getContent(),
                 saved.getIsRead(),
                 saved.getSentAt()
+//                saved.getSender().getEmail()
         );
 
+        // Push to WebSocket topic
         messagingTemplate.convertAndSend("/topic/conversation/" + conversation.getId(), response);
+
         return response;
     }
 
