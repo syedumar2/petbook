@@ -47,11 +47,10 @@ public class AdminController {
         List<UserDetailsResponse> users = adminService.getAllUsers();
         return ApiResponse.successWithCount(users.size(), "Users fetched successfully", users);
     }
+}
 
 
     //In the future build some admin endpoints to allow blacklisting users
     //allow deletion of users
     //for now all current version api endpoints behave as expected ✅
-    //TODO write units tests
-    //TODO further enhancement
-}
+
