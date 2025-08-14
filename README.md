@@ -1,10 +1,3 @@
-
-# PetBook — Pet Adoption Platform Backend
-
-PetBook is a feature-rich pet adoption backend built with Spring Boot 3.5.2 and MySQL, designed to facilitate pet adoption in India. This is a portfolio project demonstrating secure user authentication, pet management, real-time messaging between users, and admin moderation capabilities.
-
-
-
 # PetBook — Pet Adoption Platform Backend
 
 **PetBook** is a feature-rich pet adoption backend built with **Spring Boot 3.5.2** and **MySQL**, designed to facilitate pet adoption in India. This is a **portfolio project** demonstrating secure user authentication, pet management, real-time messaging between users, and admin moderation capabilities.  
