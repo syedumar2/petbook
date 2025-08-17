@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,6 +36,23 @@ public class ChatController {
         return ResponseEntity.ok(ApiResponse.success("Conversation started",response));
 
     }
+    @DeleteMapping("/api/chat/delete/{conversationId}")
+    public ResponseEntity<ApiResponse<ConversationResponse>> endConversation(@PathVariable Long conversationId)
+    {
+        ConversationResponse response = chatService.deleteConversation(conversationId);
+        return ResponseEntity.ok(ApiResponse.success("Conversation deleted",response));
+    }
+
+    @GetMapping("/api/chat/getMyConversations")
+    public ResponseEntity<ApiResponse<List<ConversationResponse>>> getMyConversations()
+    {
+        List<ConversationResponse> responseList = chatService.getUserConversations();
+        return ResponseEntity.ok(ApiResponse.success("Retrieved Conversations",responseList));
+    }
+
+
+
+
     @MessageMapping("/chat.sendMessage")
     public void sendMessage(ChatMessageRequest request, Principal principal)
     {

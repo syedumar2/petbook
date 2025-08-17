@@ -120,10 +120,12 @@ cd petbook-backend
 - `POST /api/admin/pets/{petId}/reject` — Reject pet  
 
 ### Chat
-- `POST /api/chat/start` — Start conversation  
-- WebSocket `/app/chat.sendMessage` — Send message  
-- WebSocket `/app/chat.markRead` — Mark messages as read  
-- `GET /api/chat/{conversationId}/messages` — Fetch conversation messages  
+- `POST /api/chat/start` — Start conversation
+- WebSocket `/app/chat.sendMessage` — Send message
+- WebSocket `/app/chat.markRead` — Mark messages as read
+- `GET /api/chat/{conversationId}/messages` — Fetch conversation messages
+- `DELETE /api/chat/delete/{conversationId}` — End conversation
+- `GET /api/chat/getMyConversations` — Get all conversations for the logged-in user
 
 ---
 

@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -87,11 +88,13 @@ public class ChatService {
         return response;
     }
 
+    @Transactional
     public ConversationResponse startConversation(ConversationRequest request) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByEmail(username).orElseThrow(() -> new UserNotFoundException("User not found"));
         Long userId = user.getId();
-        if(!Objects.equals(userId, request.getUser1Id()) && (!Objects.equals(userId, request.getUser2Id())) ) throw new UnauthorizedUserException("You are not authorized to start this conversation");
+        if (!Objects.equals(userId, request.getUser1Id()) && (!Objects.equals(userId, request.getUser2Id())))
+            throw new UnauthorizedUserException("You are not authorized to start this conversation");
 
         Conversation conversation = conversationRepository
                 .findBetweenUsersAndPet(request.getUser1Id(), request.getUser2Id(), request.getPetId())
@@ -152,6 +155,49 @@ public class ChatService {
                         .content(message.getContent())
                         .read(message.getIsRead())
                         .sentAt(message.getSentAt())
+                        .build())
+                .toList();
+    }
+
+    @Transactional
+    public ConversationResponse deleteConversation(Long conversationId) {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(username).orElseThrow(() -> new UserNotFoundException("User not found"));
+        Long requestingUserId = user.getId();
+        Conversation conversation = conversationRepository.findById(conversationId).orElseThrow(() -> new RuntimeException("No Conversation found"));
+        if (!Objects.equals(conversation.getUser1().getId(), requestingUserId) && !Objects.equals(conversation.getUser2().getId(), requestingUserId)) {
+            throw new UnauthorizedUserException("You are not authorized to delete this conversation");
+        }
+        conversationRepository.delete(conversation);
+        return ConversationResponse.builder()
+                .id(conversation.getId())
+                .user1Id(conversation.getUser1().getId())
+                .user1Name(conversation.getUser1().getFirstname() + " " + conversation.getUser1().getLastname())
+                .user2Id(conversation.getUser2().getId())
+                .user2Name(conversation.getUser2().getFirstname() + " " + conversation.getUser2().getLastname())
+                .petId(conversation.getPet() != null ? conversation.getPet().getId() : null)
+                .petName(conversation.getPet() != null ? conversation.getPet().getName() : null)
+                .createdAt(conversation.getCreatedAt())
+                .build();
+    }
+@Transactional(readOnly = true)
+    public List<ConversationResponse> getUserConversations() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(username).orElseThrow(() -> new UserNotFoundException("User not found"));
+        Long requestingUserId = user.getId();
+        List<Conversation> conversations = conversationRepository.findByUser1_IdOrUser2_Id(requestingUserId, requestingUserId);
+        if (conversations == null || conversations.isEmpty()) {
+            throw new RuntimeException("No conversations found");
+        }
+        return conversations.stream().map(conv -> ConversationResponse.builder()
+                        .id(conv.getId())
+                        .user1Id(conv.getUser1().getId())
+                        .user1Name(conv.getUser1().getFirstname() + " " + conv.getUser1().getLastname())
+                        .user2Id(conv.getUser2().getId())
+                        .user2Name(conv.getUser2().getFirstname() + " " + conv.getUser2().getLastname())
+                        .petId(conv.getPet() != null ? conv.getPet().getId() : null)
+                        .petName(conv.getPet() != null ? conv.getPet().getName() : null)
+                        .createdAt(conv.getCreatedAt())
                         .build())
                 .toList();
     }
