@@ -17,10 +17,18 @@ public interface PetRepository extends JpaRepository<Pet,Long>, QueryByExampleEx
     List<Pet> findByOwnerId(Long ownerId);
     Optional<Pet> findById(Long id);
     List<Pet> findByApproved(boolean approved);
+    Optional<Pet> findByIdAndApproved(Long id,boolean approved);
 
-    @Override
-    @EntityGraph(attributePaths = {"images","owner"})
-    <S extends Pet> List<S> findAll(Example<S> example);
+    List<Pet> findTop10ByNameIgnoreCaseStartingWith(String name);
+
+    // Type autocomplete
+    List<Pet> findDistinctTop10ByTypeIgnoreCaseStartingWith(String type);
+
+    // Breed autocomplete
+    List<Pet> findDistinctTop10ByBreedIgnoreCaseStartingWith(String breed);
+
+    List<Pet> findDistinctTop10ByLocationIgnoreCaseStartingWith(String location);
+
 
 
 

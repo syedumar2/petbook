@@ -8,8 +8,13 @@ import com.petbook.petbook_backend.dto.response.PetInfoPublicResponse;
 import com.petbook.petbook_backend.service.PetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -18,7 +23,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PetController {
     private final PetService petService;
-
 
 
     @GetMapping("/pets/get")
@@ -35,6 +39,13 @@ public class PetController {
         return ResponseEntity.ok(ApiResponse.successWithCount(list.size(), "Sorted Pet listing", list));
 
     }
+
+    @GetMapping("/pets/getById/{id}")
+    public ResponseEntity<ApiResponse<PetInfoPublicResponse>> getPetById(@PathVariable Long id) {
+        PetInfoPublicResponse petInfo = petService.getPetById(id);
+        return ResponseEntity.ok(ApiResponse.success("Pet Details for given pet id", petInfo));
+    }
+
 
     @GetMapping("/pets/get/page")
     public ResponseEntity<ApiResponse<PageResponse<PetInfoPublicResponse>>> getPetswithPagination(
@@ -63,28 +74,39 @@ public class PetController {
     }
 
 
-
-
-
     @GetMapping("/pets/search")
-    public ResponseEntity<ApiResponse<List<PetInfoPublicResponse>>> searchPets(
+    public ResponseEntity<ApiResponse<PageResponse<PetInfoPublicResponse>>> searchPets(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String breed,
-            @RequestParam(required = false) String location
-    ){
-        List<PetInfoPublicResponse> response = petService.searchPets(name,type,breed,location);
-        return ResponseEntity.ok(ApiResponse.successWithCount(response.size(),"Search successful",response));
-    }
+            @RequestParam(required = false) String location,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sortField", defaultValue = "name") String sortField,
+            @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection
 
+    ) {
+        PageResponse<PetInfoPublicResponse> pets = petService.searchPets(name, type, breed, location, page, size, sortField, sortDirection);
+        return ResponseEntity.ok(ApiResponse.successWithCount(
+                pets.getPageSize(),
+                "Pet listing with Pagination and Sorting",
+                pets
+        ));
+    }
 
 
     @PostMapping("/pets/get")
-    public ResponseEntity<ApiResponse<List<PetInfoPublicResponse>>> findPetsByExample (@RequestBody FindPetByExampleRequest request){
+    public ResponseEntity<ApiResponse<List<PetInfoPublicResponse>>> findPetsByExample(@RequestBody FindPetByExampleRequest request) {
         List<PetInfoPublicResponse> response = petService.findPetsByExample(request);
-        return ResponseEntity.ok(ApiResponse.successWithCount(response.size(), "Query successful",response));
+        return ResponseEntity.ok(ApiResponse.successWithCount(response.size(), "Query successful", response));
     }
 
+    @GetMapping("/pets/autocomplete")
+    public List<String> autocomplete(
+            @RequestParam String field,
+            @RequestParam String value) {
+        return petService.autocomplete(field, value);
+    }
 
 
 }

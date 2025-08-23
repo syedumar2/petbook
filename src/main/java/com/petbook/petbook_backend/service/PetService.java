@@ -19,13 +19,19 @@ import com.petbook.petbook_backend.repository.UserRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -53,9 +59,9 @@ public class PetService {
 
         applyUpdates(pet, request);
         Pet updatedPet = petRepository.save(pet);
-        List<ImageUrl> imageUrls  = new ArrayList<>();
+        List<ImageUrl> imageUrls = new ArrayList<>();
         if (request.getImageUrls() != null) {
-         imageUrls = new ArrayList<>(request.getImageUrls().stream().map(s -> ImageUrl.builder()
+            imageUrls = new ArrayList<>(request.getImageUrls().stream().map(s -> ImageUrl.builder()
                     .url(s)
                     .pet(updatedPet)
                     .build()).toList());
@@ -196,6 +202,46 @@ public class PetService {
     }
 
     @Transactional
+    public PageResponse<PetInfoPublicResponse> searchPets(String name, String type, String breed, String location, int page, int size, String sortField, String sortDirection) {
+
+        List<String> allowedFields = List.of("name", "type", "breed", "location", "adopted");
+        if (!allowedFields.contains(sortField)) {
+            throw new IllegalArgumentException("Invalid sort field: " + sortField);
+        }
+
+        Sort.Direction direction;
+        try {
+            direction = Sort.Direction.fromString(sortDirection);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid sort direction: " + sortDirection + ". Use 'asc' or 'desc'.");
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
+
+
+        Pet probe = Pet.builder()
+                .name(name)
+                .type(type)
+                .breed(breed)
+                .location(location)
+                .approved(true)
+                .build();
+
+        ExampleMatcher matcher = ExampleMatcher.matching()
+                .withIgnoreCase()
+                .withIgnoreNullValues()
+                .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING); // if you want partial matches
+
+        Example<Pet> example = Example.of(probe, matcher);
+
+        List<PetInfoPublicResponse> list = new ArrayList<>();
+        Page<PetInfoPublicResponse> petsPage = petRepository.findAll(example, pageable
+        ).map(PetInfoPublicResponse::fromEntity);
+
+        return new PageResponse<>(petsPage);
+    }
+
+    @Transactional
     public PageResponse<PetInfoPublicResponse> getPetsWithPaginationAndSorting(int page, int size, String sortField, String sortDirection) {
         List<String> allowedFields = List.of("name", "type", "breed", "location", "adopted");
         if (!allowedFields.contains(sortField)) {
@@ -258,8 +304,8 @@ public class PetService {
 
 
     }
-
     //find all pets matching exact criteria
+
     @Transactional
     public List<PetInfoPublicResponse> findPetsByExample(FindPetByExampleRequest request) {
         Pet probe = Pet.builder()
@@ -286,28 +332,6 @@ public class PetService {
     }
 
 
-    public List<PetInfoPublicResponse> searchPets(String name, String type, String breed, String location) {
-        Pet probe = Pet.builder()
-                .name(name)
-                .type(type)
-                .breed(breed)
-                .location(location)
-                .approved(true)
-                .build();
-
-        ExampleMatcher matcher = ExampleMatcher.matching()
-                .withIgnoreCase()
-                .withIgnoreNullValues()
-                .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING); // if you want partial matches
-
-        Example<Pet> example = Example.of(probe, matcher);
-        List<PetInfoPublicResponse> list = new ArrayList<>();
-        petRepository.findAll(example).forEach(p ->
-                list.add(PetInfoPublicResponse.fromEntity(p)));
-        return list;
-
-    }
-
     private void applyUpdates(Pet pet, UpdatePetRequest request) {
         if (request.getName() != null) pet.setName(request.getName());
         if (request.getType() != null) pet.setType(request.getType());
@@ -315,6 +339,48 @@ public class PetService {
         if (request.getLocation() != null) pet.setLocation(request.getLocation());
         if (request.getDescription() != null) pet.setDescription(request.getDescription());
         if (request.getAdopted() != null) pet.setAdopted(request.getAdopted());
+    }
+
+    @Transactional
+    public PetInfoPublicResponse getPetById(Long id) {
+        Pet pet = petRepository.findByIdAndApproved(id, true).orElseThrow(() ->
+                new PetListingNotFoundException("No Pet listing found for given id"));
+        String ownerEmail = (pet.getOwner() != null) ? pet.getOwner().getEmail() : null;
+        List<ImageUrl> imageUrls = pet.getImages();
+        return PetInfoPublicResponse.builder()
+                .id(pet.getId())
+                .name(pet.getName())
+                .type(pet.getType())
+                .breed(pet.getBreed())
+                .location(pet.getLocation())
+                .imageUrls(imageUrls.stream().map(ImageUrl::getUrl).collect(Collectors.toList()))
+                .adopted(pet.isAdopted())
+                .owner(ownerEmail)
+                .build();
+    }
+
+    public List<String> autocomplete(String field, String query) {
+        return switch (field.toLowerCase()) {
+            case "name" -> petRepository.findTop10ByNameIgnoreCaseStartingWith(query)
+                    .stream()
+                    .map(Pet::getName)
+                    .toList();
+            case "type" -> petRepository.findDistinctTop10ByTypeIgnoreCaseStartingWith(query)
+                    .stream()
+                    .map(Pet::getType)
+                    .toList();
+            case "breed" -> petRepository.findDistinctTop10ByBreedIgnoreCaseStartingWith(query)
+                    .stream()
+                    .map(Pet::getBreed)
+                    .toList();
+
+            case "location" -> petRepository.findDistinctTop10ByLocationIgnoreCaseStartingWith(query)
+                    .stream()
+                    .map(Pet::getLocation)
+                    .toList();
+
+            default -> List.of();
+        };
     }
 }
 

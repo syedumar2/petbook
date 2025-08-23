@@ -14,15 +14,15 @@ import java.util.List;
 
 public class PetInfoPublicResponse {
 
-
-    private String name;
-    private String type;
-    private String breed;
-    private String location;
-    private List<String> imageUrls;
-    private boolean adopted = false;
-    private String owner;
-    private String description;
+        private Long id;
+        private String name;
+        private String type;
+        private String breed;
+        private String location;
+        private List<String> imageUrls;
+        private boolean adopted = false;
+        private String owner;
+        private String description;
 
     public PetInfoPublicResponse(Pet post) {
         this.name = post.getName();
@@ -39,6 +39,7 @@ public class PetInfoPublicResponse {
 
     public static PetInfoPublicResponse fromEntity(Pet pet){
         return new PetInfoPublicResponse(
+                pet.getId(),
                 pet.getName(),
                 pet.getType(),
                 pet.getBreed(),

@@ -50,7 +50,8 @@ public class AdminController {
 }
 
 
-    //In the future build some admin endpoints to allow blacklisting users
-    //allow deletion of users
+//TODO Build delete user feature
+//TODO build a send message to user feature
+//TODO notify user if their listing was approved this willl tie into the sendMessage feature
     //for now all current version api endpoints behave as expected ✅
 

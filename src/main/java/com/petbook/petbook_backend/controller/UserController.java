@@ -15,11 +15,21 @@ import com.petbook.petbook_backend.service.UserServiceImpl;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -30,13 +40,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserController {
 
+    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
     private final PetService petService;
     private final CloudinaryService cloudinaryService;
     private final UserServiceImpl userService;
 
-    @GetMapping("/user/me")
+    @GetMapping("auth/user/me")
     public ResponseEntity<ApiResponse<UserInfoResponse>> userEndpoint() {
         UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
         User user = userService.findByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.success("Profile Details received", UserInfoResponse.builder()
                 .email(userDetails.getUsername())
@@ -49,7 +61,7 @@ public class UserController {
                 .build()));
     }
 
-    @GetMapping("/user/me/pets")
+    @GetMapping("auth/user/me/pets")
     public ResponseEntity<ApiResponse<List<PetInfoPrivateResponse>>> userPets() {
         List<PetInfoPrivateResponse> list = petService.getUserPets();
         return ResponseEntity.ok(ApiResponse.success("Pet Listings owned by you", list));
@@ -57,7 +69,7 @@ public class UserController {
     }
 
 
-    @PostMapping(value = "/user/me/pets", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "auth/user/me/pets", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<PetInfoPrivateResponse>> addPet(@Valid @RequestPart("petData") AddPetRequest request, @Valid @RequestPart("images") List<MultipartFile> images) {
 
         List<String> imageUrls = images.stream().map(cloudinaryService::uploadFile).collect(Collectors.toList());
@@ -69,7 +81,7 @@ public class UserController {
 
     }
 
-    @PutMapping(value = "/user/me/pets/{petId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = "auth/user/me/pets/{petId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<PetInfoPrivateResponse>> updatePet(@PathVariable @NotNull long petId,
                                                                          @Valid @RequestPart("petData") UpdatePetRequest request,
                                                                          @RequestPart(value = "images", required = false) List<MultipartFile> images) {
@@ -86,7 +98,7 @@ public class UserController {
     }
 
 
-    @DeleteMapping("/user/me/pets/{petId}")
+    @DeleteMapping("auth/user/me/pets/{petId}")
     public ResponseEntity<ApiResponse<PetInfoPrivateResponse>> deletePet(@PathVariable @NotNull long petId) {
         PetInfoPrivateResponse response = petService.deletePetPost(petId);
 
@@ -95,19 +107,18 @@ public class UserController {
     }
 
     //Profile update controller
-    @PatchMapping(value = "/user/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PatchMapping(value = "auth/user/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<UserDetailsResponse>> updateUser(@RequestPart("userData") UpdateUserRequest request,
                                                                        @RequestPart(value = "imageUrl", required = false) MultipartFile image
-                                                                    ){
+    ) {
 
-        if (image != null && !image.isEmpty() ) {
+        if (image != null && !image.isEmpty()) {
             String imageUrls = cloudinaryService.uploadFile(image);
             request.setProfileImageUrl(imageUrls);
         }
         UserDetailsResponse response = userService.updateUser(request);
-        return ResponseEntity.ok(ApiResponse.success("Updated Profile Data",response));
+        return ResponseEntity.ok(ApiResponse.success("Updated Profile Data", response));
     }
-
 
 
 }

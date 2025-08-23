@@ -84,11 +84,11 @@ public class GlobalRestExceptionHandler {
                 .body(ApiResponse.failure(ex.getMessage()));
     }
 
-    @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ApiResponse<Object>> handleUserNotFound(UserNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.failure(ex.getMessage()));
-    }
+        @ExceptionHandler(UserNotFoundException.class)
+        public ResponseEntity<ApiResponse<Object>> handleUserNotFound(UserNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.failure(ex.getMessage()));
+        }
 
     @ExceptionHandler(ImageUploadException.class)
     public ResponseEntity<ApiResponse<Object>> handleImageUploadException(ImageUploadException ex) {
