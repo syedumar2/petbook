@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -14,7 +16,7 @@ public class UpdateUserRequest {
     String firstname;
     String lastname;
     String email;
-    String password;
     String location;
     String profileImageUrl;
+    String publicId;
 }

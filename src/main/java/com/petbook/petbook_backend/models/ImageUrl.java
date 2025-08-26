@@ -21,6 +21,9 @@ public class ImageUrl {
     @Column(nullable = false)
     private String url;
 
+    @Column(nullable = false)
+    private String publicId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "pet_id",nullable = false)
     private Pet pet;

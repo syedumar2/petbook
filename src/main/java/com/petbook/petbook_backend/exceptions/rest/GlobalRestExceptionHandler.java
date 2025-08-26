@@ -10,6 +10,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 import javax.security.auth.RefreshFailedException;
@@ -84,11 +85,11 @@ public class GlobalRestExceptionHandler {
                 .body(ApiResponse.failure(ex.getMessage()));
     }
 
-        @ExceptionHandler(UserNotFoundException.class)
-        public ResponseEntity<ApiResponse<Object>> handleUserNotFound(UserNotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(ApiResponse.failure(ex.getMessage()));
-        }
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUserNotFound(UserNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.failure(ex.getMessage()));
+    }
 
     @ExceptionHandler(ImageUploadException.class)
     public ResponseEntity<ApiResponse<Object>> handleImageUploadException(ImageUploadException ex) {
@@ -107,6 +108,14 @@ public class GlobalRestExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.failure(ex.getMessage()));
     }
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResponse<Object>> handleMaxSizeException(MaxUploadSizeExceededException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.failure("File too large! Max allowed size is 5MB."));
+    }
+
+
+
 
     //------------------------------------------------------------------------JWT ERRORS------------------------------------------------------------------------//
     @ExceptionHandler(JwtException.class)

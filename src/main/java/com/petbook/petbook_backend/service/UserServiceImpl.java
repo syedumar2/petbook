@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl implements UserDetailsService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CloudinaryService cloudinaryService;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -41,11 +42,16 @@ public class UserServiceImpl implements UserDetailsService {
             user.setEmail(request.getEmail());
         }
 
-        if (request.getPassword() != null)
-            user.setPassword(passwordEncoder.encode(request.getPassword()));
+
         if (request.getLocation() != null) user.setLocation(request.getLocation());
-        if (request.getProfileImageUrl() != null) user.setProfileImageUrl(request.getProfileImageUrl());
-        ;
+        if (request.getProfileImageUrl() != null && request.getPublicId() != null) {
+            //delete prev pfp image
+            cloudinaryService.deleteFile(user.getPublicId());
+            //set new one from request
+            user.setProfileImageUrl(request.getProfileImageUrl());
+            user.setPublicId(request.getPublicId());
+        };
+
         User newUserDetails = userRepository.save(user);
         return UserDetailsResponse.builder()
                 .role(newUserDetails.getRole())
@@ -60,15 +66,15 @@ public class UserServiceImpl implements UserDetailsService {
 
     }
 
-    public User loadUserById(Long id){
+    public User loadUserById(Long id) {
         return userRepository.findById(id).orElseThrow(() -> new UserNotFoundException("User not found"));
     }
-    public Long findUserId(String username)
-    {
-        return userRepository.findByEmail(username).orElseThrow(()-> new UserNotFoundException("User not found")).getId();
+
+    public Long findUserId(String username) {
+        return userRepository.findByEmail(username).orElseThrow(() -> new UserNotFoundException("User not found")).getId();
     }
 
     public User findByEmail(String username) {
-        return userRepository.findByEmail(username).orElseThrow(()->new UserNotFoundException("User not found"));
+        return userRepository.findByEmail(username).orElseThrow(() -> new UserNotFoundException("User not found"));
     }
 }

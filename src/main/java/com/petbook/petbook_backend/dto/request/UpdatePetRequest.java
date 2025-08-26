@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 
 @Data
@@ -21,7 +22,7 @@ public class UpdatePetRequest {
     private String type;
     private String breed;
     private String location;
-    private List<String> imageUrls = new ArrayList<>();
+    private List<Map<String,String>> imageUrls = new ArrayList<>();
     private Boolean adopted;
     private String description;
 

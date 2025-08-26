@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
 
 @Data
@@ -26,7 +27,7 @@ public class AddPetRequest {
     @NotBlank(message = "Pet location is required")
     private String location;
 
-    private List<String> imageUrls;// Updated from single String to List
+    private List<Map<String,String>> imageUrls;// Updated from single String to List
     private User owner;
 
 

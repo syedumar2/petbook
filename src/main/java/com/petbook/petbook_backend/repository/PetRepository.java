@@ -2,6 +2,8 @@ package com.petbook.petbook_backend.repository;
 
 import com.petbook.petbook_backend.models.Pet;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -14,7 +16,8 @@ import java.util.Optional;
 
 @Repository
 public interface PetRepository extends JpaRepository<Pet,Long>, QueryByExampleExecutor<Pet>, JpaSpecificationExecutor<Pet> {
-    List<Pet> findByOwnerId(Long ownerId);
+
+    Page<Pet> findByOwnerId(Long ownerId, Pageable pageable);
     Optional<Pet> findById(Long id);
     List<Pet> findByApproved(boolean approved);
     Optional<Pet> findByIdAndApproved(Long id,boolean approved);

@@ -96,9 +96,16 @@ public class PetController {
 
 
     @PostMapping("/pets/get")
-    public ResponseEntity<ApiResponse<List<PetInfoPublicResponse>>> findPetsByExample(@RequestBody FindPetByExampleRequest request) {
-        List<PetInfoPublicResponse> response = petService.findPetsByExample(request);
-        return ResponseEntity.ok(ApiResponse.successWithCount(response.size(), "Query successful", response));
+    public ResponseEntity<ApiResponse<PageResponse<PetInfoPublicResponse>>> findPetsByExample(@RequestBody FindPetByExampleRequest request,
+                                                                                              @RequestParam(value = "page", defaultValue = "0") int page,
+                                                                                              @RequestParam(value = "size", defaultValue = "20") int size,
+                                                                                              @RequestParam(value = "sortField", defaultValue = "name") String sortField,
+                                                                                              @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection) {
+        PageResponse<PetInfoPublicResponse> pets = petService.findPetsByExample(request,page,size,sortField,sortDirection);
+        return ResponseEntity.ok(ApiResponse.successWithCount(
+                pets.getPageSize(),
+                "Pet listing with Pagination and Sorting",
+                pets));
     }
 
     @GetMapping("/pets/autocomplete")

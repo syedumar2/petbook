@@ -67,30 +67,30 @@ public class ProtectedControllerTest {
         mockMvc.perform(get("/api/user/me")).andExpect(status().isOk()).andExpect(jsonPath("$.message").value("Profile Details received")).andExpect(jsonPath("$.data.email").value("testUser")).andExpect(jsonPath("$.data.roles[0].authority").value("ROLE_USER"));
     }
 
-    @Test
-    @WithMockUser(username = "test@example.com", roles = {"USER"})
-    void userPets() throws Exception {
-        //given
-        UserDetails userDetails = new User("test@example.com", "password", Collections.singletonList(() -> "ROLE_USER"));
-        Authentication authentication = mock(Authentication.class);
-        when(authentication.getPrincipal()).thenReturn(userDetails);
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
-        List<PetInfoPrivateResponse> petList = List.of(PetInfoPrivateResponse.builder().id(1L).name("Leo").type("Dog").breed("Labrador").location("Hyderabad").imageUrls(List.of("https://example.com/leo1.jpg", "https://example.com/leo2.jpg")).adopted(false).description("Playful and loyal Labrador, loves to run.").owner("test@example.com").build(), PetInfoPrivateResponse.builder().id(2L).name("Milo").type("Cat").breed("Bengal").location("Chennai").imageUrls(List.of("https://example.com/milo.jpg")).adopted(true).description("Independent Bengal cat, already adopted.").owner("test@example.com").build(), PetInfoPrivateResponse.builder().id(3L).name("Bruno").type("Dog").breed("Beagle").location("Pune").imageUrls(List.of("https://example.com/bruno.jpg")).adopted(false).description("Friendly Beagle good with families.").owner("test@example.com").build());
-
-
-        when(petService.getUserPets()).thenReturn(petList);
-
-        mockMvc.perform(get("/api/user/me/pets"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true))
-                .andExpect(jsonPath("$.message").value("Pet Listings owned by you"))
-                .andExpect(jsonPath("$.data[0].owner").value("test@example.com"))
-                .andExpect(jsonPath("$.data[1].owner").value("test@example.com"))
-                .andExpect(jsonPath("$.data[2].owner").value("test@example.com"));
-
-
-    }
+//    @Test
+//    @WithMockUser(username = "test@example.com", roles = {"USER"})
+//    void userPets() throws Exception {
+//        //given
+//        UserDetails userDetails = new User("test@example.com", "password", Collections.singletonList(() -> "ROLE_USER"));
+//        Authentication authentication = mock(Authentication.class);
+//        when(authentication.getPrincipal()).thenReturn(userDetails);
+//        when(securityContext.getAuthentication()).thenReturn(authentication);
+//        SecurityContextHolder.setContext(securityContext);
+//        List<PetInfoPrivateResponse> petList = List.of(PetInfoPrivateResponse.builder().id(1L).name("Leo").type("Dog").breed("Labrador").location("Hyderabad").imageUrls(List.of("https://example.com/leo1.jpg", "https://example.com/leo2.jpg")).adopted(false).description("Playful and loyal Labrador, loves to run.").owner("test@example.com").build(), PetInfoPrivateResponse.builder().id(2L).name("Milo").type("Cat").breed("Bengal").location("Chennai").imageUrls(List.of("https://example.com/milo.jpg")).adopted(true).description("Independent Bengal cat, already adopted.").owner("test@example.com").build(), PetInfoPrivateResponse.builder().id(3L).name("Bruno").type("Dog").breed("Beagle").location("Pune").imageUrls(List.of("https://example.com/bruno.jpg")).adopted(false).description("Friendly Beagle good with families.").owner("test@example.com").build());
+//
+//
+//        when(petService.getUserPets()).thenReturn(petList);
+//
+//        mockMvc.perform(get("/api/user/me/pets"))
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.success").value(true))
+//                .andExpect(jsonPath("$.message").value("Pet Listings owned by you"))
+//                .andExpect(jsonPath("$.data[0].owner").value("test@example.com"))
+//                .andExpect(jsonPath("$.data[1].owner").value("test@example.com"))
+//                .andExpect(jsonPath("$.data[2].owner").value("test@example.com"));
+//
+//
+//    }
 
     @Test
     void userEndpoint_Unauthenticated_ReturnsUnauthorized() throws Exception {

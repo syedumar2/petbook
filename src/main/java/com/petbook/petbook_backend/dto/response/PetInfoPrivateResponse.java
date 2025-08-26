@@ -1,10 +1,18 @@
 package com.petbook.petbook_backend.dto.response;
 
 
-import lombok.*;
+import com.petbook.petbook_backend.models.Pet;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
@@ -17,7 +25,7 @@ public class PetInfoPrivateResponse {
     private String type;
     private String breed;
     private String location;
-    private List<String> imageUrls;
+    private List<Map<String, String>> imageUrls;
     private boolean adopted = false;
     private String owner;
     private String description;
@@ -25,4 +33,26 @@ public class PetInfoPrivateResponse {
     private LocalDateTime approvedAt;
     private LocalDateTime rejectedAt;
 
+
+    public static PetInfoPrivateResponse fromEntity(Pet pet) {
+        return new PetInfoPrivateResponse(
+                pet.getId(),
+                pet.getName(),
+                pet.getType(),
+                pet.getBreed(),
+                pet.getLocation(),
+                pet.getImages().stream().map(img -> {
+                    Map<String, String> map = new HashMap<>();
+                    map.put(img.getUrl(), img.getPublicId());
+                    return map;
+                }).collect(Collectors.toList()),
+                pet.isAdopted(),
+                pet.getOwner().getEmail(),
+                pet.getDescription(),
+                pet.isApproved(),
+                pet.getApprovedAt(),
+                pet.getRejectedAt()
+        );
+    }
 }
+
