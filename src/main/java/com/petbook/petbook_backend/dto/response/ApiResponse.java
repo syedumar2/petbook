@@ -37,6 +37,9 @@ public class ApiResponse<T> {
     public static <T> ApiResponse<T> failure(String message) {
         return new ApiResponse<>(false, message, null, 0);
     }
+    public static <T> ApiResponse<T> successWithMessage(String message){
+        return new ApiResponse<>(true,message,null,0);
+    }
 
     public static ApiResponse<Map<String, String>> failureInValidation(String message, Map<String, String> data) {
         return new ApiResponse<>(false, message, data, data != null ? data.size() : 0);

@@ -25,21 +25,6 @@ public class PetController {
     private final PetService petService;
 
 
-    @GetMapping("/pets/get")
-    public ResponseEntity<ApiResponse<List<PetInfoPublicResponse>>> getAllPets() {
-        List<PetInfoPublicResponse> list = petService.getAllPets();
-        return ResponseEntity.ok(ApiResponse.successWithCount(list.size(), "All Pets listed in System", list));
-
-    }
-
-    @GetMapping("/pets/get/{field}")
-    public ResponseEntity<ApiResponse<List<PetInfoPublicResponse>>> getPetswithSort(@PathVariable String field) {
-
-        List<PetInfoPublicResponse> list = petService.getPetsWithSorting(field);
-        return ResponseEntity.ok(ApiResponse.successWithCount(list.size(), "Sorted Pet listing", list));
-
-    }
-
     @GetMapping("/pets/getById/{id}")
     public ResponseEntity<ApiResponse<PetInfoPublicResponse>> getPetById(@PathVariable Long id) {
         PetInfoPublicResponse petInfo = petService.getPetById(id);
@@ -47,16 +32,6 @@ public class PetController {
     }
 
 
-    @GetMapping("/pets/get/page")
-    public ResponseEntity<ApiResponse<PageResponse<PetInfoPublicResponse>>> getPetswithPagination(
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "20") int size
-
-    ) {
-        PageResponse<PetInfoPublicResponse> pets = petService.getPetsWithPagination(page, size);
-        return ResponseEntity.ok(ApiResponse.successWithCount(pets.getPageSize(), "Pet listing with Pagination", pets));
-
-    }
 
     @GetMapping("/pets/get/page-sort")
     public ResponseEntity<ApiResponse<PageResponse<PetInfoPublicResponse>>> getPetsWithPaginationAndSorting(

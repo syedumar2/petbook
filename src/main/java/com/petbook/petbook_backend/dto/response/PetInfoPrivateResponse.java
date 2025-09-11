@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
@@ -17,7 +18,7 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @Builder
-@NoArgsConstructor
+@RequiredArgsConstructor
 @AllArgsConstructor
 public class PetInfoPrivateResponse {
     private long id;
@@ -25,6 +26,7 @@ public class PetInfoPrivateResponse {
     private String type;
     private String breed;
     private String location;
+    private String gender;
     private List<Map<String, String>> imageUrls;
     private boolean adopted = false;
     private String owner;
@@ -41,6 +43,7 @@ public class PetInfoPrivateResponse {
                 pet.getType(),
                 pet.getBreed(),
                 pet.getLocation(),
+                pet.getGender().toString(),
                 pet.getImages().stream().map(img -> {
                     Map<String, String> map = new HashMap<>();
                     map.put(img.getUrl(), img.getPublicId());

@@ -2,18 +2,19 @@ package com.petbook.petbook_backend.controller;
 
 
 import com.petbook.petbook_backend.dto.request.AddPetRequest;
+import com.petbook.petbook_backend.dto.request.AdoptionRequest;
 import com.petbook.petbook_backend.dto.request.UpdatePetRequest;
 import com.petbook.petbook_backend.dto.request.UpdateUserRequest;
 import com.petbook.petbook_backend.dto.response.ApiResponse;
 import com.petbook.petbook_backend.dto.response.PageResponse;
 import com.petbook.petbook_backend.dto.response.PetInfoPrivateResponse;
-import com.petbook.petbook_backend.dto.response.PetInfoPublicResponse;
 import com.petbook.petbook_backend.dto.response.UserDetailsResponse;
 import com.petbook.petbook_backend.dto.response.UserInfoResponse;
 import com.petbook.petbook_backend.models.User;
-import com.petbook.petbook_backend.service.CloudinaryService;
 import com.petbook.petbook_backend.service.PetService;
 import com.petbook.petbook_backend.service.UserServiceImpl;
+import com.petbook.petbook_backend.service.facades.PetFacade;
+import com.petbook.petbook_backend.service.facades.UserFacade;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -36,8 +38,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
@@ -46,8 +46,10 @@ public class UserController {
 
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
     private final PetService petService;
-    private final CloudinaryService cloudinaryService;
+
     private final UserServiceImpl userService;
+    private final PetFacade petFacade;
+    private final UserFacade userFacade;
 
     @GetMapping("auth/user/me")
     public ResponseEntity<ApiResponse<UserInfoResponse>> userEndpoint() {
@@ -55,6 +57,7 @@ public class UserController {
 
         User user = userService.findByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.success("Profile Details received", UserInfoResponse.builder()
+                .id(user.getId())
                 .email(userDetails.getUsername())
                 .firstname(user.getFirstname())
                 .lastname(user.getLastname())
@@ -87,18 +90,13 @@ public class UserController {
     public ResponseEntity<ApiResponse<PetInfoPrivateResponse>> addPet(@Valid @RequestPart("petData") AddPetRequest request, @Valid @RequestPart("images") List<MultipartFile> images) {
 
 
-            List<Map<String,String>> imageUrls = images.stream()
-                    .map(cloudinaryService::uploadFile).collect(Collectors.toList());
-            request.setImageUrls(imageUrls);
-
-
-        PetInfoPrivateResponse response = petService.addPetPost(request);
+        PetInfoPrivateResponse response = petFacade.addPetWithImages(request, images);
         return ResponseEntity.ok(ApiResponse.success("Pet listed successfully", response));
 
     }
 
     @GetMapping("auth/user/me/pets/{petId}")
-    public ResponseEntity<ApiResponse<PetInfoPrivateResponse>> getUserPetById(@PathVariable @NotNull long petId){
+    public ResponseEntity<ApiResponse<PetInfoPrivateResponse>> getUserPetById(@PathVariable @NotNull long petId) {
         PetInfoPrivateResponse response = petService.findUserPet(petId);
         return ResponseEntity.ok(ApiResponse.success("Pet listing retrieved successfully", response));
     }
@@ -117,15 +115,18 @@ public class UserController {
                                                                          @Valid @RequestPart("petData") UpdatePetRequest request,
                                                                          @RequestPart(value = "images", required = false) List<MultipartFile> images) {
 
-        if (images != null && !images.isEmpty()) {
-            List<Map<String,String>> imageUrls = images.stream()
-                    .map(cloudinaryService::uploadFile).collect(Collectors.toList());
-            request.setImageUrls(imageUrls);
-        }
 
-        PetInfoPrivateResponse response = petService.updatePetPost(request, petId);
+        PetInfoPrivateResponse response = petFacade.updatePetWithImages(petId, request, images);
         return ResponseEntity.ok(ApiResponse.success("Pet listing updated successfully", response));
     }
+
+    @PatchMapping("auth/user/me/pets/{petId}")
+    public ResponseEntity<ApiResponse<PetInfoPrivateResponse>> markAsAdopted(@PathVariable @NotNull long petId, @RequestBody AdoptionRequest request
+    ) {
+        PetInfoPrivateResponse response = petService.updatePetAdoptionStatus(petId, request.getAdopted());
+        return ResponseEntity.ok(ApiResponse.success("Adoption status updated successfully", response));
+    }
+
 
     //Profile update controller
     @PatchMapping(value = "auth/user/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -133,14 +134,8 @@ public class UserController {
                                                                        @RequestPart(value = "imageUrl", required = false) MultipartFile image
     ) {
 
-        if (image != null && !image.isEmpty()) {
-            Map<String, String> imageUrls  = cloudinaryService.uploadFile(image);
-            for(Map.Entry map : imageUrls.entrySet()){
-                request.setProfileImageUrl(map.getKey().toString());
-                request.setPublicId(map.getValue().toString());
-            }
-        }
-        UserDetailsResponse response = userService.updateUser(request);
+
+        UserDetailsResponse response = userFacade.updateUserPfp(request, image);
         return ResponseEntity.ok(ApiResponse.success("Updated Profile Data", response));
     }
 
@@ -150,10 +145,6 @@ public class UserController {
 /*
 ALL ENDPOINTS WORKING AS EXPECTED ✅
 TODO Build a separate endpoint for changing password
-TODO DONE : Refactor all endpoints that interact with cloudinary to delete any images on request or failure
-Services that require cloudinary file deletion:
-Profile update endpoint
-Pet Listing update endpoint
-Pet listing Delete endpoint
+TODO (MEDIUM) Add a gender type to PetListing requests
+TODO Investigate session disconnect error
 */
-

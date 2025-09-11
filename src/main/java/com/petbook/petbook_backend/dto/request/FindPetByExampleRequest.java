@@ -13,6 +13,7 @@ public class FindPetByExampleRequest {
     private String type;
     private String breed;
     private String location;
+    private String gender;
     private Boolean adopted;
     private String ownerEmail;
 }

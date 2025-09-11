@@ -17,7 +17,9 @@ import java.util.Optional;
 @Repository
 public interface PetRepository extends JpaRepository<Pet,Long>, QueryByExampleExecutor<Pet>, JpaSpecificationExecutor<Pet> {
 
+    @EntityGraph(attributePaths = {"images"})
     Page<Pet> findByOwnerId(Long ownerId, Pageable pageable);
+
     Optional<Pet> findById(Long id);
     List<Pet> findByApproved(boolean approved);
     Optional<Pet> findByIdAndApproved(Long id,boolean approved);

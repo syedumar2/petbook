@@ -32,5 +32,15 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     )
     List<Long> findReadMessages(Long conversationId, Long userId);
 
+    @Query("SELECT COUNT(m) FROM Message m " +
+            "WHERE (m.sender.id = :userId OR m.receiver.id = :userId) "
+            + "AND m.isRead = false")
+    Long findUnreadMessagesCount(Long userId);
+
+    @Query("SELECT COUNT(DISTINCT m.conversation.id) FROM Message m "
+            + "WHERE (m.sender.id = :userId OR m.receiver.id = :userId) "
+            + "AND m.isRead = false")
+    Long countDistinctConversationsWithUnreadMessages(Long userId);
+
     List<Message> findByConversationIdOrderBySentAtAsc(Long conversationId);
 }

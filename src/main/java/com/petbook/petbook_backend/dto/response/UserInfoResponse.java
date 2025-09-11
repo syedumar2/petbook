@@ -13,6 +13,7 @@ import java.util.Map;
 @AllArgsConstructor
 @Builder
 public class UserInfoResponse {
+    private Long id;
     private String email;
     private Collection<?> roles;
     private  String firstname;

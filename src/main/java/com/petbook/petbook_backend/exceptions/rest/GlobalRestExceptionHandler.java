@@ -114,6 +114,12 @@ public class GlobalRestExceptionHandler {
                 .body(ApiResponse.failure("File too large! Max allowed size is 5MB."));
     }
 
+    @ExceptionHandler(ConversationAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse<Object>> handleConversationException(ConversationAlreadyExistsException ex){
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(ApiResponse.failure(ex.getMessage()));
+    }
+
 
 
 

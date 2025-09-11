@@ -22,4 +22,5 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
                                                   @Param("petId") Long petId);
 
     List<Conversation> findByUser1_IdOrUser2_Id(Long user1Id, Long user2Id);
+
 }

@@ -22,6 +22,7 @@ public class UpdatePetRequest {
     private String type;
     private String breed;
     private String location;
+    private String gender;
     private List<Map<String,String>> imageUrls = new ArrayList<>();
     private Boolean adopted;
     private String description;

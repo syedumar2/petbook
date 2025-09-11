@@ -3,18 +3,20 @@ package com.petbook.petbook_backend.service;
 import com.petbook.petbook_backend.dto.request.LoginRequest;
 import com.petbook.petbook_backend.dto.request.RegisterRequest;
 import com.petbook.petbook_backend.dto.response.AuthResponse;
+import com.petbook.petbook_backend.exceptions.rest.UnauthorizedUserException;
+import com.petbook.petbook_backend.models.NotificationType;
 import com.petbook.petbook_backend.models.Role;
 import com.petbook.petbook_backend.models.User;
+import com.petbook.petbook_backend.repository.BlacklistedUserRepository;
 import com.petbook.petbook_backend.repository.UserRepository;
-import io.jsonwebtoken.JwtException;
-import jakarta.annotation.PostConstruct;
+import com.petbook.petbook_backend.service.events.NotificationEvent;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
@@ -24,7 +26,6 @@ import org.springframework.stereotype.Service;
 
 import javax.security.auth.RefreshFailedException;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +35,8 @@ public class AuthService {
     private final UserRepository userRepository;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final BlacklistedUserRepository blacklistedUserRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
 
     public String register(RegisterRequest request) {
@@ -49,13 +52,18 @@ public class AuthService {
         user.setCreatedAt(LocalDateTime.now());
         user.setRole(Role.USER);
 
-        userRepository.save(user);
+        user = userRepository.save(user);
+
+        applicationEventPublisher.publishEvent(NotificationEvent.builder().recipientUserId(user.getId())
+                .type(NotificationType.WELCOME)
+                .message("“Welcome to PetBook, " + user.getLastname() + "! \uD83D\uDC3E Start exploring adorable pets and connect with fellow animal lovers today!"));
+
+
         return "User registered successfully";
 
     }
 
-    public String adminRegister(RegisterRequest request)
-    {
+    public String adminRegister(RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new IllegalArgumentException("Email already in use");
         }
@@ -82,7 +90,11 @@ public class AuthService {
         } catch (AuthenticationException e) {
             throw new RuntimeException(e.getMessage());
         }
+
         User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new UsernameNotFoundException("Username not found in Db"));
+        if (blacklistedUserRepository.existsByUserId(user.getId())) {
+            throw new UnauthorizedUserException("User is blacklisted");
+        }
 
         String jwtToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
@@ -101,16 +113,20 @@ public class AuthService {
             throw new RefreshFailedException("Invalid Refresh Token");
         }
         String newAccessToken = jwtService.generateToken(user);
+        String newRefreshToken = jwtService.generateRefreshToken(user);
+        user.setRefreshToken(newRefreshToken);
+        userRepository.save(user);
 
 
         return AuthResponse.builder()
                 .token(newAccessToken)
+                .refreshToken(newRefreshToken)
                 .build();
     }
 
     public void logout(HttpServletRequest request, HttpServletResponse response) {
-        String refreshToken =  extractRefreshTokenFromCookie(request);
-        if(refreshToken == null){
+        String refreshToken = extractRefreshTokenFromCookie(request);
+        if (refreshToken == null) {
             return;
         }
         try {
@@ -119,22 +135,22 @@ public class AuthService {
                     .orElseThrow(() -> new UsernameNotFoundException("User not found"));
             user.setRefreshToken(null);
             userRepository.save(user);
-        } catch (Exception e){
+        } catch (Exception e) {
             throw new RuntimeException(e.getMessage());
         }
-        ResponseCookie deleteCookie = ResponseCookie.from("refreshToken","")
+        ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
                 .maxAge(0)
                 .build();
-        response.setHeader(HttpHeaders.SET_COOKIE,deleteCookie.toString());
+        response.setHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
     }
 
     private String extractRefreshTokenFromCookie(HttpServletRequest request) {
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
-                if ("refreshToken".equals(cookie.getName())) {
+                if ("refreshToken" .equals(cookie.getName())) {
                     return cookie.getValue();
                 }
             }

@@ -31,8 +31,9 @@
 
         @Override
         public void configureMessageBroker(MessageBrokerRegistry registry) {
-            registry.enableSimpleBroker("/topic"); //outgoing
-            registry.setApplicationDestinationPrefixes("/app"); //incoming
+            registry.enableSimpleBroker("/topic","/user"); //subscription
+            registry.setApplicationDestinationPrefixes("/app"); //prefix for messageMapping
+            registry.setUserDestinationPrefix("/user");
 
         }
 

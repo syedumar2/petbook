@@ -23,6 +23,8 @@ public class AddPetRequest {
     @NotBlank(message = "Pet Type is required")
     private String type;
     private String breed;
+    @NotBlank(message = "Pet Gender required")
+    private String gender;
     private String description;
     @NotBlank(message = "Pet location is required")
     private String location;
