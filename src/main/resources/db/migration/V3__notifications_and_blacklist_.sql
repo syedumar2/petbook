@@ -31,3 +31,7 @@ CREATE TABLE blacklisted_user (
         FOREIGN KEY (user_id) REFERENCES user(id)
         ON DELETE CASCADE
 );
+
+
+ALTER TABLE pets
+ADD COLUMN created_at TIMESTAMP NOT NULL;

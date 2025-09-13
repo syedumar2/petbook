@@ -95,6 +95,7 @@ public class PetService {
                 .adopted(pet.isAdopted())
                 .owner(ownerEmail)
                 .ownerId(ownerId)
+                .createdAt(pet.getCreatedAt())
                 .build();
     }
 
@@ -285,16 +286,7 @@ public class PetService {
                         .type(NotificationType.PET_DELETED).build()
         );
 
-        return PetInfoPrivateResponse.builder()
-                .id(pet.getId())
-                .name(pet.getName())
-                .type(pet.getType())
-                .breed(pet.getBreed())
-                .location(pet.getLocation())
-                .imageUrls(imageUrls)
-                .adopted(pet.isAdopted())
-                .owner(username)
-                .build();
+        return mapToPetInfoPrivateResponse(pet,user.getEmail());
 
 
     }
@@ -321,6 +313,7 @@ public class PetService {
                 .owner(request.getOwner())
                 .approved(true)
                 .approvedAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now())
                 .build());
 
         List<ImageUrl> imageUrls = new ArrayList<>();
@@ -343,21 +336,7 @@ public class PetService {
                         .type(NotificationType.PET_APPROVED).build()
         );
 
-        return PetInfoPrivateResponse.builder()
-                .id(savedPet.getId())
-                .name(savedPet.getName())
-                .type(savedPet.getType())
-                .breed(savedPet.getBreed())
-                .location(savedPet.getLocation())
-                .imageUrls(imageUrls.stream().map(img -> {
-                    Map<String, String> map = new HashMap<>();
-                    map.put(img.getUrl(), img.getPublicId());
-                    return map;
-                }).toList())
-                .adopted(savedPet.isAdopted())
-                .owner(username)
-                .description(savedPet.getDescription())
-                .build();
+        return mapToPetInfoPrivateResponseWithImages(savedPet,username,imageUrls);
 
 
     }
@@ -388,17 +367,7 @@ public class PetService {
                         .type(NotificationType.PET_UPDATED).build()
         );
 
-
-        return PetInfoPrivateResponse.builder()
-                .id(pet.getId())
-                .name(pet.getName())
-                .type(pet.getType())
-                .breed(pet.getBreed())
-                .location(pet.getLocation())
-                .adopted(pet.isAdopted())
-                .owner(user.getEmail())
-                .description(pet.getDescription())
-                .build();
+        return mapToPetInfoPrivateResponse(pet,user.getEmail());
 
 
     }
@@ -448,21 +417,7 @@ public class PetService {
                         .type(NotificationType.PET_UPDATED).build()
         );
 
-        return PetInfoPrivateResponse.builder()
-                .id(pet.getId())
-                .name(pet.getName())
-                .type(pet.getType())
-                .breed(pet.getBreed())
-                .location(pet.getLocation())
-                .imageUrls(pet.getImages().stream().map(img -> {
-                    Map<String, String> map = new HashMap<>();
-                    map.put(img.getUrl(), img.getPublicId());
-                    return map;
-                }).toList())
-                .adopted(pet.isAdopted())
-                .owner(user.getEmail())
-                .description(pet.getDescription())
-                .build();
+        return mapToPetInfoPrivateResponseWithImages(pet,username,pet.getImages());
     }
 
     private void applyUpdates(Pet pet, UpdatePetRequest request) {
@@ -474,6 +429,40 @@ public class PetService {
         if (request.getDescription() != null) pet.setDescription(request.getDescription());
         if (request.getAdopted() != null) pet.setAdopted(request.getAdopted());
     }
+
+    private PetInfoPrivateResponse mapToPetInfoPrivateResponseWithImages(Pet savedPet, String username, List<ImageUrl> imageUrls){
+        return PetInfoPrivateResponse.builder()
+                .id(savedPet.getId())
+                .name(savedPet.getName())
+                .type(savedPet.getType())
+                .breed(savedPet.getBreed())
+                .location(savedPet.getLocation())
+                .imageUrls(imageUrls.stream().map(img -> {
+                    Map<String, String> map = new HashMap<>();
+                    map.put(img.getUrl(), img.getPublicId());
+                    return map;
+                }).toList())
+                .adopted(savedPet.isAdopted())
+                .owner(username)
+                .description(savedPet.getDescription())
+                .createdAt(savedPet.getCreatedAt())
+                .build();
+    }
+    private PetInfoPrivateResponse mapToPetInfoPrivateResponse(Pet pet,String userEmail){
+        return PetInfoPrivateResponse.builder()
+                .id(pet.getId())
+                .name(pet.getName())
+                .type(pet.getType())
+                .breed(pet.getBreed())
+                .location(pet.getLocation())
+                .adopted(pet.isAdopted())
+                .owner(userEmail)
+                .description(pet.getDescription())
+                .createdAt(pet.getCreatedAt())
+                .build();
+    }
+
+
 }
 
 

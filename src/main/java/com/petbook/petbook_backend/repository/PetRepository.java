@@ -22,6 +22,7 @@ public interface PetRepository extends JpaRepository<Pet,Long>, QueryByExampleEx
 
     Optional<Pet> findById(Long id);
     List<Pet> findByApproved(boolean approved);
+    Page<Pet> findByApproved(boolean approved,Pageable pageable);
     Optional<Pet> findByIdAndApproved(Long id,boolean approved);
 
     List<Pet> findTop10ByNameIgnoreCaseStartingWith(String name);

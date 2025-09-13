@@ -30,7 +30,7 @@ public class NotificationListener {
     private final MessageRepository messageRepository;
 
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    @EventListener
     public void handleNotificationEvent(NotificationEvent notificationEvent) {
         Notification notification = new Notification();
         notification.setRecipientId(notificationEvent.getRecipientUserId());

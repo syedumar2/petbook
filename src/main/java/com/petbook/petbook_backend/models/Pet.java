@@ -53,4 +53,8 @@ public class Pet {
     private LocalDateTime approvedAt;
     private LocalDateTime rejectedAt;
 
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+
 }

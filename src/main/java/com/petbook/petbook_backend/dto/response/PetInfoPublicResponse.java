@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -29,6 +30,7 @@ public class PetInfoPublicResponse {
     private String owner;
     private String description;
     private Long ownerId;
+    private LocalDateTime createdAt;
 
     public PetInfoPublicResponse(Pet post) {
         this.name = post.getName();
@@ -40,6 +42,7 @@ public class PetInfoPublicResponse {
         this.adopted = post.isAdopted();
         this.owner = post.getOwner().getEmail();
         this.description = post.getDescription();
+        this.createdAt = post.getCreatedAt();
     }
 
 
@@ -55,7 +58,8 @@ public class PetInfoPublicResponse {
                 pet.isAdopted(),
                 pet.getOwner().getEmail(),
                 pet.getDescription(),
-                pet.getOwner().getId()
+                pet.getOwner().getId(),
+                pet.getCreatedAt()
         );
     }
 

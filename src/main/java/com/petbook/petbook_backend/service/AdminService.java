@@ -2,8 +2,10 @@ package com.petbook.petbook_backend.service;
 
 import com.petbook.petbook_backend.dto.request.PetActionRequest;
 import com.petbook.petbook_backend.dto.request.UserActionsRequest;
+import com.petbook.petbook_backend.dto.response.PageResponse;
 import com.petbook.petbook_backend.dto.response.PetInfoPrivateResponse;
 import com.petbook.petbook_backend.dto.response.UserDetailsResponse;
+import com.petbook.petbook_backend.exceptions.rest.UserAlreadyBlackListedException;
 import com.petbook.petbook_backend.exceptions.rest.UserNotFoundException;
 import com.petbook.petbook_backend.models.BlacklistedUser;
 import com.petbook.petbook_backend.models.NotificationType;
@@ -16,6 +18,10 @@ import com.petbook.petbook_backend.service.events.NotificationEvent;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,19 +40,78 @@ public class AdminService {
     private final ApplicationEventPublisher applicationEventPublisher;
 
     @Transactional
-    public List<PetInfoPrivateResponse> getApprovedPets() {
-        return petRepository.findByApproved(true)
-                .stream()
-                .map(this::mapToPetInfoPrivateResponse)
-                .toList();
+    public PageResponse<PetInfoPrivateResponse> getApprovedPets(int page, int size, String sortField, String sortDirection) {
+        List<String> allowedFields = List.of("name", "type", "breed", "location", "adopted");
+        if (!allowedFields.contains(sortField)) {
+            throw new IllegalArgumentException("Invalid sort field: " + sortField);
+        }
+        Sort.Direction direction;
+        try {
+            direction = Sort.Direction.fromString(sortDirection);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid sort direction: " + sortDirection + ". Use 'asc' or 'desc'.");
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
+
+        Page<PetInfoPrivateResponse> petsPage = petRepository.findByApproved(true, pageable).map(PetInfoPrivateResponse::fromEntity);
+        ;
+        return new PageResponse<>(petsPage);
+
     }
 
     @Transactional
-    public List<PetInfoPrivateResponse> getUnapprovedPets() {
-        return petRepository.findByApproved(false)
-                .stream()
-                .map(this::mapToPetInfoPrivateResponse)
-                .toList();
+    public PageResponse<PetInfoPrivateResponse> getUnapprovedPets(int page, int size, String sortField, String sortDirection) {
+        List<String> allowedFields = List.of("name", "type", "breed", "location", "adopted");
+        if (!allowedFields.contains(sortField)) {
+            throw new IllegalArgumentException("Invalid sort field: " + sortField);
+        }
+        Sort.Direction direction;
+        try {
+            direction = Sort.Direction.fromString(sortDirection);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid sort direction: " + sortDirection + ". Use 'asc' or 'desc'.");
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
+
+        Page<PetInfoPrivateResponse> petsPage = petRepository.findByApproved(false, pageable).map(PetInfoPrivateResponse::fromEntity);
+        ;
+        return new PageResponse<>(petsPage);
+    }
+
+    public PageResponse<PetInfoPrivateResponse> getAllPets(int page, int size, String sortField, String sortDirection) {
+        List<String> allowedFields = List.of("name", "type", "breed", "location", "adopted");
+        if (!allowedFields.contains(sortField)) {
+            throw new IllegalArgumentException("Invalid sort field: " + sortField);
+        }
+        Sort.Direction direction;
+        try {
+            direction = Sort.Direction.fromString(sortDirection);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid sort direction: " + sortDirection + ". Use 'asc' or 'desc'.");
+        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
+        Page<PetInfoPrivateResponse> petsPage = petRepository.findAll(pageable).map(PetInfoPrivateResponse::fromEntity);
+        return new PageResponse<>(petsPage);
+
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<UserDetailsResponse> getAllUsers(int page, int size, String sortField, String sortDirection) {
+        List<String> allowedFields = List.of("createdAt", "firstname", "role");
+        if (!allowedFields.contains(sortField)) {
+            throw new IllegalArgumentException("Invalid sort field: " + sortField);
+        }
+        Sort.Direction direction;
+        try {
+            direction = Sort.Direction.fromString(sortDirection);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid sort direction: " + sortDirection + ". Use 'asc' or 'desc'.");
+        }
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
+        Page<UserDetailsResponse> usersPage = userRepository.findAll(pageable).map(UserDetailsResponse::fromEntity);
+        return new PageResponse<>(usersPage);
     }
 
     @Transactional
@@ -114,6 +179,7 @@ public class AdminService {
         for (Pet pet : pets) {
             applicationEventPublisher.publishEvent(NotificationEvent.builder()
                     .recipientUserId(pet.getOwner().getId())
+                    .recipientEmail(pet.getOwner().getEmail())
                     .message("Your pet " + pet.getName() + " has been rejected by Admin")
                     .type(NotificationType.PET_REJECTED)
                     .build());
@@ -123,19 +189,32 @@ public class AdminService {
     }
 
     @Transactional
-    public List<UserDetailsResponse> getAllUsers() {
-        return userRepository.findAll()
-                .stream()
-                .map(this::mapToUserInfoResponse)
-                .toList();
-    }
+    public PageResponse<UserDetailsResponse> getBlackListedUsers(
+            int page, int size, String sortField, String sortDirection
+    ) {
+        List<String> allowedFields = List.of("blacklistedAt", "firstname", "role");
+        if (!allowedFields.contains(sortField)) {
+            throw new IllegalArgumentException("Invalid sort field: " + sortField);
+        }
 
-    @Transactional
-    public List<UserDetailsResponse> getBlackListedUsers() {
-        return blacklistedUserRepository.findAll().stream().map(u -> {
-            User user = u.getUser();
-            return mapToUserInfoResponse(user);
-        }).collect(Collectors.toList());
+        Sort.Direction direction;
+        try {
+            direction = Sort.Direction.fromString(sortDirection);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid sort direction: " + sortDirection + ". Use 'asc' or 'desc'.");
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
+        Page<BlacklistedUser> blacklistedUserPage = blacklistedUserRepository.findAll(pageable);
+
+        Page<UserDetailsResponse> userPage = blacklistedUserPage.map(blacklistedUser ->
+                UserDetailsResponse.fromEntityWithBlackList(
+                        blacklistedUser.getUser(),
+                        blacklistedUser.getBlacklistedAt()
+                )
+        );
+
+        return new PageResponse<>(userPage);
     }
 
 
@@ -172,6 +251,10 @@ public class AdminService {
         User user = userRepository.findById(userId).orElseThrow(
                 () -> new UserNotFoundException("Invalid User id passed")
         );
+        boolean isUserBlacklisted = blacklistedUserRepository.existsByUserId(userId);
+        if (isUserBlacklisted) {
+            throw new UserAlreadyBlackListedException("User " + userId + " is already blacklisted");
+        }
         BlacklistedUser blacklistedUser = BlacklistedUser.builder()
                 .user(user)
                 .reason(message)
@@ -180,6 +263,13 @@ public class AdminService {
         blacklistedUserRepository.save(blacklistedUser);
 
 
+    }
+
+    public void whiteListUser(@NotNull Long userId) {
+        BlacklistedUser blacklistedUser = blacklistedUserRepository.findByUserId(userId).orElseThrow(
+                () -> new UserNotFoundException("User is not blacklisted or id passed is invalid")
+        );
+        blacklistedUserRepository.delete(blacklistedUser);
     }
 
 
@@ -222,4 +312,3 @@ public class AdminService {
                 .toList();
     }
 }
-//TODO allow blacklisting and deleting users

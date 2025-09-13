@@ -85,6 +85,12 @@ public class GlobalRestExceptionHandler {
                 .body(ApiResponse.failure(ex.getMessage()));
     }
 
+    @ExceptionHandler(UserAlreadyBlackListedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleUserBlacklisted(UserAlreadyBlackListedException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.failure(ex.getMessage()));
+    }
+
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ApiResponse<Object>> handleUserNotFound(UserNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -108,6 +114,7 @@ public class GlobalRestExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.failure(ex.getMessage()));
     }
+
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ApiResponse<Object>> handleMaxSizeException(MaxUploadSizeExceededException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -115,12 +122,10 @@ public class GlobalRestExceptionHandler {
     }
 
     @ExceptionHandler(ConversationAlreadyExistsException.class)
-    public ResponseEntity<ApiResponse<Object>> handleConversationException(ConversationAlreadyExistsException ex){
+    public ResponseEntity<ApiResponse<Object>> handleConversationException(ConversationAlreadyExistsException ex) {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.failure(ex.getMessage()));
     }
-
-
 
 
     //------------------------------------------------------------------------JWT ERRORS------------------------------------------------------------------------//

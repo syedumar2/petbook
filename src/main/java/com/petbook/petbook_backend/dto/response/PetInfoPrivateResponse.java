@@ -5,7 +5,6 @@ import com.petbook.petbook_backend.models.Pet;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
@@ -34,6 +33,7 @@ public class PetInfoPrivateResponse {
     private Boolean approved;
     private LocalDateTime approvedAt;
     private LocalDateTime rejectedAt;
+    private LocalDateTime createdAt;
 
 
     public static PetInfoPrivateResponse fromEntity(Pet pet) {
@@ -54,7 +54,8 @@ public class PetInfoPrivateResponse {
                 pet.getDescription(),
                 pet.isApproved(),
                 pet.getApprovedAt(),
-                pet.getRejectedAt()
+                pet.getRejectedAt(),
+                pet.getCreatedAt()
         );
     }
 }
