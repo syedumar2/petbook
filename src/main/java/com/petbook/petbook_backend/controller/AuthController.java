@@ -76,7 +76,7 @@ public class AuthController {
                 .secure(true)
                 .path("/")
                 .maxAge(7 * 24 * 60 * 60)
-                .sameSite("Strict")
+                .sameSite("None")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
         return ResponseEntity.ok(ApiResponse.success("New token issued", authResponse));
