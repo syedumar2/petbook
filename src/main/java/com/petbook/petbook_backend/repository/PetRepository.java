@@ -1,5 +1,6 @@
 package com.petbook.petbook_backend.repository;
 
+import com.petbook.petbook_backend.dto.response.PetInfoPrivateListingDTO;
 import com.petbook.petbook_backend.dto.response.PetInfoPrivateResponse;
 import com.petbook.petbook_backend.dto.response.PetInfoPublicListingDTO;
 import com.petbook.petbook_backend.dto.response.PetInfoPublicResponse;
@@ -61,42 +62,49 @@ public interface PetRepository extends JpaRepository<Pet, Long>, QueryByExampleE
     Optional<Pet> findById(Long id);
 
     @Query("""
-       SELECT new com.petbook.petbook_backend.dto.response.PetInfoPrivateResponse(
-           p.id,
-           p.name,
-           p.type,
-           p.breed,
-           p.location,
-           CONCAT('', p.gender),
-           null,
-           p.adopted,
-           u.email,
-           u.id,
-           p.description,
-           p.approved,
-           p.approvedAt,
-           p.rejectedAt,
-           p.createdAt
-       )
-       FROM Pet p
-       JOIN p.owner u
-       WHERE p.id = :id
-       """)
+            SELECT new com.petbook.petbook_backend.dto.response.PetInfoPrivateResponse(
+                p.id,
+                p.name,
+                p.type,
+                p.breed,
+                p.location,
+                CONCAT('', p.gender),
+                null,
+                p.adopted,
+                u.email,
+                u.id,
+                p.description,
+                p.approved,
+                p.approvedAt,
+                p.rejectedAt,
+                p.createdAt
+            )
+            FROM Pet p
+            JOIN p.owner u
+            WHERE p.id = :id
+            """)
     Optional<PetInfoPrivateResponse> findUserPetById(Long id);
 
+    //for finding user pets page
     @Query("""
-       SELECT new com.petbook.petbook_backend.dto.response.PetInfoPrivateResponse(
+       SELECT new com.petbook.petbook_backend.dto.response.PetInfoPrivateListingDTO(
            p.id,
            p.name,
            p.type,
            p.breed,
            p.location,
            CONCAT('', p.gender),
-           null,
+           (SELECT i.url
+                FROM ImageUrl i
+                WHERE i.pet.id = p.id
+                AND i.id = (
+                    SELECT MIN(i2.id) FROM ImageUrl i2 WHERE i2.pet.id = p.id
+                )
+           ),
            p.adopted,
            u.email,
-           u.id,
            p.description,
+           u.id,
            p.approved,
            p.approvedAt,
            p.rejectedAt,
@@ -106,7 +114,7 @@ public interface PetRepository extends JpaRepository<Pet, Long>, QueryByExampleE
        JOIN p.owner u
        WHERE u.id = :ownerId
        """)
-    Page<PetInfoPrivateResponse> findByOwnerIdProjected(@Param("ownerId") Long ownerId, Pageable pageable);
+    Page<PetInfoPrivateListingDTO> findByOwnerIdProjected(@Param("ownerId") Long ownerId, Pageable pageable);
 
 
     @EntityGraph(attributePaths = {"images", "owner"})

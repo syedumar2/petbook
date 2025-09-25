@@ -7,12 +7,12 @@ import com.petbook.petbook_backend.dto.request.UpdatePetRequest;
 import com.petbook.petbook_backend.dto.request.UpdateUserRequest;
 import com.petbook.petbook_backend.dto.response.ApiResponse;
 import com.petbook.petbook_backend.dto.response.PageResponse;
+import com.petbook.petbook_backend.dto.response.PetInfoPrivateListingDTO;
 import com.petbook.petbook_backend.dto.response.PetInfoPrivateResponse;
 import com.petbook.petbook_backend.dto.response.UserDetailsResponse;
 import com.petbook.petbook_backend.dto.response.UserInfoResponse;
 import com.petbook.petbook_backend.models.CustomUserDetails;
 import com.petbook.petbook_backend.models.User;
-import com.petbook.petbook_backend.security.utils.SecurityUtils;
 import com.petbook.petbook_backend.service.PetService;
 import com.petbook.petbook_backend.service.UserServiceImpl;
 import com.petbook.petbook_backend.service.facades.PetFacade;
@@ -25,8 +25,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -74,7 +72,7 @@ public class UserController {
     }
 
     @GetMapping("auth/user/me/pets")
-    public ResponseEntity<ApiResponse<PageResponse<PetInfoPrivateResponse>>> userPets(
+    public ResponseEntity<ApiResponse<PageResponse<PetInfoPrivateListingDTO>>> userPets(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size,
             @RequestParam(value = "sortField", defaultValue = "name") String sortField,
@@ -82,7 +80,7 @@ public class UserController {
             @AuthenticationPrincipal CustomUserDetails userDetails
 
     ) {
-        PageResponse<PetInfoPrivateResponse> pets = petService.getUserPets(sortField, sortDirection, page, size,userDetails);
+        PageResponse<PetInfoPrivateListingDTO> pets = petService.getUserPets(sortField, sortDirection, page, size,userDetails);
         return ResponseEntity.ok(ApiResponse.successWithCount(
                 pets.getPageSize(),
                 "Pet listings owned by you",

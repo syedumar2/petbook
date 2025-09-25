@@ -4,6 +4,7 @@ import com.petbook.petbook_backend.dto.request.AddPetRequest;
 import com.petbook.petbook_backend.dto.request.FindPetByExampleRequest;
 import com.petbook.petbook_backend.dto.request.UpdatePetRequest;
 import com.petbook.petbook_backend.dto.response.PageResponse;
+import com.petbook.petbook_backend.dto.response.PetInfoPrivateListingDTO;
 import com.petbook.petbook_backend.dto.response.PetInfoPrivateResponse;
 import com.petbook.petbook_backend.dto.response.PetInfoPublicListingDTO;
 import com.petbook.petbook_backend.dto.response.PetInfoPublicResponse;
@@ -96,7 +97,7 @@ public class PetService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<PetInfoPrivateResponse> getUserPets(String sortField, String sortDirection, int page, int size, CustomUserDetails userDetails) {
+    public PageResponse<PetInfoPrivateListingDTO> getUserPets(String sortField, String sortDirection, int page, int size, CustomUserDetails userDetails) {
         Long userId = userDetails.getId();
 
         List<String> allowedFields = List.of("name", "type", "breed", "location", "adopted");
@@ -107,7 +108,7 @@ public class PetService {
         Sort.Direction direction = Sort.Direction.fromString(sortDirection);
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
 
-        Page<PetInfoPrivateResponse> petsPage = petRepository.findByOwnerIdProjected(userId, pageable);
+        Page<PetInfoPrivateListingDTO> petsPage = petRepository.findByOwnerIdProjected(userId, pageable);
 
         return new PageResponse<>(petsPage);
     }
