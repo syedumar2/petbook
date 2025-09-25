@@ -36,6 +36,7 @@ public class NotificationListener {
         notification.setRecipientId(notificationEvent.getRecipientUserId());
         notification.setMessage(notificationEvent.getMessage());
         notification.setType(notificationEvent.getType());
+        notification.setCreatedAt(LocalDateTime.now());
 
         Notification savedNotification = notificationRepository.save(notification);
 
