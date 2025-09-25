@@ -5,6 +5,7 @@ import com.petbook.petbook_backend.dto.request.LoginRequest;
 import com.petbook.petbook_backend.dto.request.RegisterRequest;
 import com.petbook.petbook_backend.dto.response.ApiResponse;
 import com.petbook.petbook_backend.dto.response.AuthResponse;
+import com.petbook.petbook_backend.models.User;
 import com.petbook.petbook_backend.service.AuthService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -82,15 +84,12 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("New token issued", authResponse));
     }
 
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(
-            HttpServletRequest request,
-            HttpServletResponse response
-    ) {
-        authService.logout(request, response);
-        return ResponseEntity.ok("Logged out successfully");
+    public void logout(HttpServletRequest request, HttpServletResponse response) {
+        authService.logout(request,response);
+        // Clear cookie regardless
 
     }
+
 
 }//logout,login, register and refresh work
 // Main controllers are working as expected ✅

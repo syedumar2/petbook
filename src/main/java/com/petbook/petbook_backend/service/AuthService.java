@@ -148,11 +148,12 @@ public class AuthService {
         }
         ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
-                .secure(true)
+                .secure(true) // set true only in production HTTPS
                 .path("/")
                 .maxAge(0)
+                .sameSite("None")
                 .build();
-        response.setHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
     }
 
     private String extractRefreshTokenFromCookie(HttpServletRequest request) {
