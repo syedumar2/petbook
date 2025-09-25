@@ -144,16 +144,18 @@ public class AuthService {
             user.setRefreshToken(null);
             userRepository.save(user);
         } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
+            e.printStackTrace();
+        } finally {
+            ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
+                    .httpOnly(true)
+                    .secure(true) // set true only in production HTTPS
+                    .path("/")
+                    .maxAge(0)
+                    .sameSite("None")
+                    .build();
+            response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
         }
-        ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
-                .httpOnly(true)
-                .secure(true) // set true only in production HTTPS
-                .path("/")
-                .maxAge(0)
-                .sameSite("None")
-                .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
+
     }
 
     private String extractRefreshTokenFromCookie(HttpServletRequest request) {
