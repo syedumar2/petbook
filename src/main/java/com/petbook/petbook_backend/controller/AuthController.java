@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.security.auth.RefreshFailedException;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -84,10 +85,10 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("New token issued", authResponse));
     }
 
-    public void logout(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
         authService.logout(request,response);
         // Clear cookie regardless
-
+        return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
     }
 
 
