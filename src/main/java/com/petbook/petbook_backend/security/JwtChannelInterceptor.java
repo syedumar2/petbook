@@ -1,5 +1,6 @@
 package com.petbook.petbook_backend.security;
 
+import com.petbook.petbook_backend.models.CustomUserDetails;
 import com.petbook.petbook_backend.service.JwtService;
 import com.petbook.petbook_backend.service.UserServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -36,21 +38,30 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
             }
             token = token.substring(7);
 
+            Long userId = jwtService.extractUserId(token);  // extract ID from token
             String username = jwtService.extractUsername(token);
-            log.debug("Extracted username from JWT: {}", username);
+            String role = jwtService.extractUserRole(token);
+            System.out.println("Interceptor logging: "+" userId: " + userId +" username: " + username +" role: " + role);
 
-            if (username == null) {
+            if (username == null || userId == null) {
                 log.warn("WebSocket CONNECT failed: Invalid JWT token (no username)");
                 throw new IllegalArgumentException("Invalid JWT token");
             }
 
-            UserDetails user = userService.loadUserByUsername(username);
-            if (!jwtService.isTokenValid(token, user)) {
+            CustomUserDetails userDetails = new CustomUserDetails(userId, username, role);
+
+            if (!jwtService.isTokenValid(token, userDetails)) {
                 log.warn("WebSocket CONNECT failed: Token validation failed for user {}", username);
                 throw new IllegalArgumentException("Invalid JWT token");
             }
 
-            accessor.setUser(new UsernamePasswordAuthenticationToken(username, null, user.getAuthorities()));
+            accessor.setUser(
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails,      // <- principal is the full CustomUserDetails
+                            null,
+                            userDetails.getAuthorities()
+                    )
+            );
             log.info("WebSocket CONNECT successful for user: {}", username);
         }
         else if (StompCommand.DISCONNECT.equals(accessor.getCommand())) {

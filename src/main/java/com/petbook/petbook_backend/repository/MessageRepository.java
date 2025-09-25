@@ -1,5 +1,6 @@
 package com.petbook.petbook_backend.repository;
 
+import com.petbook.petbook_backend.dto.response.MessageResponse;
 import com.petbook.petbook_backend.models.Message;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -42,5 +43,22 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
             + "AND m.isRead = false")
     Long countDistinctConversationsWithUnreadMessages(Long userId);
 
+    @Query("SELECT m FROM Message m JOIN FETCH m.sender JOIN FETCH m.receiver WHERE m.conversation.id = :conversationId")
     List<Message> findByConversationIdOrderBySentAtAsc(Long conversationId);
+
+    @Query("""
+             SELECT new com.petbook.petbook_backend.dto.response.MessageResponse(
+             m.id,
+            u1.id,  CONCAT(u1.firstname, ' ', u1.lastname),
+            u2.id,  CONCAT(u2.firstname, ' ', u2.lastname),
+            m.content,
+            m.isRead,
+            m.sentAt
+             ) FROM Message m
+              JOIN m.sender u1
+            JOIN m.receiver u2
+            WHERE m.conversation.id = :conversationId
+            ORDER BY m.sentAt ASC
+            """)
+    List<MessageResponse> findMessagesByConversationId(Long conversationId);
 }

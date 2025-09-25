@@ -29,6 +29,7 @@ public class PetInfoPrivateResponse {
     private List<Map<String, String>> imageUrls;
     private boolean adopted = false;
     private String owner;
+    private Long ownerId;
     private String description;
     private Boolean approved;
     private LocalDateTime approvedAt;
@@ -51,6 +52,7 @@ public class PetInfoPrivateResponse {
                 }).collect(Collectors.toList()),
                 pet.isAdopted(),
                 pet.getOwner().getEmail(),
+                pet.getOwner().getId(),
                 pet.getDescription(),
                 pet.isApproved(),
                 pet.getApprovedAt(),

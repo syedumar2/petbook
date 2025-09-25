@@ -1,8 +1,10 @@
 package com.petbook.petbook_backend.security;
 
+import com.petbook.petbook_backend.models.CustomUserDetails;
 import com.petbook.petbook_backend.models.User;
 import com.petbook.petbook_backend.service.JwtService;
 import com.petbook.petbook_backend.service.UserServiceImpl;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.security.SignatureException;
@@ -47,9 +49,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             jwtToken = authHeader.substring(7); // Remove "Bearer "
             userEmail = jwtService.extractUsername(jwtToken);
+            Long userId = jwtService.extractUserId(jwtToken);
+            String role = jwtService.extractUserRole(jwtToken);
 
-            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+
+            if (userEmail != null && userId!=null && role!=null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                CustomUserDetails userDetails = new CustomUserDetails(userId,userEmail,role);
                 if (jwtService.isTokenValid(jwtToken, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());

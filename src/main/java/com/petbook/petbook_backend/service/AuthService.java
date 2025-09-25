@@ -105,24 +105,32 @@ public class AuthService {
 
 
     public AuthResponse refreshAccessToken(String refreshToken) throws RefreshFailedException {
-        String username = jwtService.extractUsername(refreshToken);
-        var user = userRepository.findByEmail(username)
+
+        Long userId = jwtService.extractUserId(refreshToken);
+
+
+        var user = userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        if (!jwtService.isTokenValid(refreshToken, user)) {
+
+        if (!jwtService.isTokenValid(refreshToken,user)) {  // optional: overload to skip UserDetails check
             throw new RefreshFailedException("Invalid Refresh Token");
         }
+
+
         String newAccessToken = jwtService.generateToken(user);
         String newRefreshToken = jwtService.generateRefreshToken(user);
+
+
         user.setRefreshToken(newRefreshToken);
         userRepository.save(user);
-
 
         return AuthResponse.builder()
                 .token(newAccessToken)
                 .refreshToken(newRefreshToken)
                 .build();
     }
+
 
     public void logout(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = extractRefreshTokenFromCookie(request);

@@ -4,6 +4,7 @@ package com.petbook.petbook_backend.controller;
 import com.petbook.petbook_backend.dto.request.FindPetByExampleRequest;
 import com.petbook.petbook_backend.dto.response.ApiResponse;
 import com.petbook.petbook_backend.dto.response.PageResponse;
+import com.petbook.petbook_backend.dto.response.PetInfoPublicListingDTO;
 import com.petbook.petbook_backend.dto.response.PetInfoPublicResponse;
 import com.petbook.petbook_backend.service.PetService;
 import lombok.RequiredArgsConstructor;
@@ -34,13 +35,13 @@ public class PetController {
 
 
     @GetMapping("/pets/get/page-sort")
-    public ResponseEntity<ApiResponse<PageResponse<PetInfoPublicResponse>>> getPetsWithPaginationAndSorting(
+    public ResponseEntity<ApiResponse<PageResponse<PetInfoPublicListingDTO>>> getPetsWithPaginationAndSorting(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size,
             @RequestParam(value = "sortField", defaultValue = "name") String sortField,
             @RequestParam(value = "sortDirection", defaultValue = "asc") String sortDirection
     ) {
-        PageResponse<PetInfoPublicResponse> pets = petService.getPetsWithPaginationAndSorting(page, size, sortField, sortDirection);
+        PageResponse<PetInfoPublicListingDTO> pets = petService.getPetsWithPaginationAndSorting(page, size, sortField, sortDirection);
         return ResponseEntity.ok(ApiResponse.successWithCount(
                 pets.getPageSize(),
                 "Pet listing with Pagination and Sorting",

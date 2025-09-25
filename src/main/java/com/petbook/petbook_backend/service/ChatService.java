@@ -7,8 +7,6 @@ import com.petbook.petbook_backend.dto.response.ChatMessageResponse;
 import com.petbook.petbook_backend.dto.response.ConversationResponse;
 import com.petbook.petbook_backend.dto.response.MarkReadResponse;
 import com.petbook.petbook_backend.dto.response.MessageResponse;
-import com.petbook.petbook_backend.dto.sockets.PresenceIndicationRequest;
-import com.petbook.petbook_backend.dto.sockets.PresenceIndicatorPayload;
 import com.petbook.petbook_backend.dto.sockets.SocketEvent;
 import com.petbook.petbook_backend.exceptions.rest.ChatAccessDeniedException;
 import com.petbook.petbook_backend.exceptions.rest.ConversationAlreadyExistsException;
@@ -16,6 +14,7 @@ import com.petbook.petbook_backend.exceptions.rest.ConversationNotFoundException
 import com.petbook.petbook_backend.exceptions.rest.UnauthorizedUserException;
 import com.petbook.petbook_backend.exceptions.rest.UserNotFoundException;
 import com.petbook.petbook_backend.models.Conversation;
+import com.petbook.petbook_backend.models.CustomUserDetails;
 import com.petbook.petbook_backend.models.EventType;
 import com.petbook.petbook_backend.models.Message;
 import com.petbook.petbook_backend.models.NotificationType;
@@ -164,10 +163,7 @@ public class ChatService {
         Conversation conversation = conversationRepository.findById(conversationId).orElseThrow(() -> new ConversationNotFoundException("Conversation not found"));
 
         validateParticipant(conversation, authenticatedUserId);
-        List<Message> prevMessages = messageRepository.findByConversationIdOrderBySentAtAsc(conversationId);
-        //if prevMessages are marked as unread then, mark them read
-
-        return prevMessages.stream().map(message -> MessageResponse.builder().id(message.getId()).senderId(message.getSender().getId()).senderName(message.getSender().getFirstname() + " " + message.getSender().getLastname()).receiverId(message.getReceiver().getId()).receiverName(message.getReceiver().getFirstname() + " " + message.getReceiver().getLastname()).content(message.getContent()).read(message.getIsRead()).sentAt(message.getSentAt()).build()).toList();
+        return messageRepository.findMessagesByConversationId(conversationId);
     }
 
     @Transactional
@@ -221,15 +217,9 @@ public class ChatService {
     }
 
     @Transactional(readOnly = true)
-    public List<ConversationResponse> getUserConversations() {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByEmail(username).orElseThrow(() -> new UserNotFoundException("User not found"));
-        Long requestingUserId = user.getId();
-        List<Conversation> conversations = conversationRepository.findByUser1_IdOrUser2_Id(requestingUserId, requestingUserId);
-        if (conversations == null || conversations.isEmpty()) {
-            throw new RuntimeException("No conversations found");
-        }
-        return conversations.stream().map(conv -> ConversationResponse.builder().id(conv.getId()).user1Id(conv.getUser1().getId()).user1Name(conv.getUser1().getFirstname() + " " + conv.getUser1().getLastname()).user2Id(conv.getUser2().getId()).user2Name(conv.getUser2().getFirstname() + " " + conv.getUser2().getLastname()).petId(conv.getPet() != null ? conv.getPet().getId() : null).petName(conv.getPet() != null ? conv.getPet().getName() : null).createdAt(conv.getCreatedAt()).build()).toList();
+    public List<ConversationResponse> getUserConversations(CustomUserDetails userDetails) {
+        Long requestingUserId = userDetails.getId();
+        return conversationRepository.findByUserId(requestingUserId);
     }
 
     private void validateParticipant(Conversation conversation, Long userId) {
@@ -242,30 +232,15 @@ public class ChatService {
     }
 
     @Transactional
-    public ConversationResponse getConversation(Long conversationId) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.findByEmail(username).orElseThrow(() -> new UserNotFoundException("User not found"));
-        Conversation conversation = conversationRepository.findById(conversationId).orElseThrow(() -> new RuntimeException("No such conversation found"));
-        validateParticipant(conversation, user.getId());
-        return ConversationResponse.builder().id(conversation.getId()).user1Id(conversation.getUser1().getId()).user1Name(conversation.getUser1().getFirstname() + " " + conversation.getUser1().getLastname()).user2Id(conversation.getUser2().getId()).user2Name(conversation.getUser2().getFirstname() + " " + conversation.getUser2().getLastname()).petId(conversation.getPet() != null ? conversation.getPet().getId() : null).petName(conversation.getPet() != null ? conversation.getPet().getName() : null).createdAt(conversation.getCreatedAt()).build();
+    public ConversationResponse getConversation(Long conversationId, CustomUserDetails userDetails) {
+//        String username = userDetails.getUsername();
+//        User user = userRepository.findByEmail(username).orElseThrow(() -> new UserNotFoundException("User not found"));
+        return conversationRepository.findConversationById(conversationId).orElseThrow(() -> new RuntimeException("No such conversation found"));
+
+//        Conversation conversation = conversationRepository.findById(conversationId).orElseThrow(() -> new RuntimeException("No such conversation found"));
+//        validateParticipant(conversation, user.getId());
+//        return ConversationResponse.builder().id(conversation.getId()).user1Id(conversation.getUser1().getId()).user1Name(conversation.getUser1().getFirstname() + " " + conversation.getUser1().getLastname()).user2Id(conversation.getUser2().getId()).user2Name(conversation.getUser2().getFirstname() + " " + conversation.getUser2().getLastname()).petId(conversation.getPet() != null ? conversation.getPet().getId() : null).petName(conversation.getPet() != null ? conversation.getPet().getName() : null).createdAt(conversation.getCreatedAt()).build();
 
     }
 
-
-    public void indicatePresence(PresenceIndicationRequest request, Long authenticatedUserId) {
-        if (!request.getUserId().equals(authenticatedUserId)) return;
-        PresenceIndicatorPayload payload = PresenceIndicatorPayload.builder()
-                .online(request.isOnline())
-                .userId(authenticatedUserId)
-                .build();
-        ;
-        if (request.isOnline()) {
-            messagingTemplate.convertAndSend("/topic/conversation/" + request.getConversationId(), new SocketEvent<>(EventType.USER_CONNECTED, payload));
-
-        } else {
-            messagingTemplate.convertAndSend("/topic/conversation/" + request.getConversationId(), new SocketEvent<>(EventType.USER_DISCONNECTED, payload));
-
-        }
-
-    }
 }

@@ -1,6 +1,8 @@
 package com.petbook.petbook_backend.repository;
 
+import com.petbook.petbook_backend.dto.response.ConversationResponse;
 import com.petbook.petbook_backend.models.Conversation;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,6 +23,35 @@ public interface ConversationRepository extends JpaRepository<Conversation, Long
                                                   @Param("user2Id") Long user2Id,
                                                   @Param("petId") Long petId);
 
-    List<Conversation> findByUser1_IdOrUser2_Id(Long user1Id, Long user2Id);
+    @Query("""
+            SELECT new com.petbook.petbook_backend.dto.response.ConversationResponse(
+                c.id,
+                u1.id,  CONCAT(u1.firstname, ' ', u1.lastname),
+                u2.id,  CONCAT(u2.firstname, ' ', u2.lastname),
+                p.id, p.name,
+                c.createdAt
+            ) FROM Conversation c
+            JOIN c.user1 u1
+            JOIN c.user2 u2
+            LEFT JOIN c.pet p
+            WHERE c.user1.id = :userId OR c.user2.id = :userId
+            """)
+    List<ConversationResponse> findByUserId(Long userId);
+
+
+    @Query("""
+            SELECT new com.petbook.petbook_backend.dto.response.ConversationResponse(
+                c.id,
+                u1.id,  CONCAT(u1.firstname, ' ', u1.lastname),
+                u2.id,  CONCAT(u2.firstname, ' ', u2.lastname),
+                p.id, p.name,
+                c.createdAt
+            ) FROM Conversation c
+            JOIN c.user1 u1
+            JOIN c.user2 u2
+            LEFT JOIN c.pet p
+            WHERE c.id = :conversationId
+            """)
+    Optional<ConversationResponse> findConversationById(@Param("conversationId") Long conversationId);
 
 }

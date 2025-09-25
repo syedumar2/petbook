@@ -3,6 +3,7 @@ package com.petbook.petbook_backend.service;
 import com.petbook.petbook_backend.dto.request.UpdateUserRequest;
 import com.petbook.petbook_backend.dto.response.UserDetailsResponse;
 import com.petbook.petbook_backend.exceptions.rest.UserNotFoundException;
+import com.petbook.petbook_backend.models.CustomUserDetails;
 import com.petbook.petbook_backend.models.User;
 import com.petbook.petbook_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,8 @@ public class UserServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByEmail(username).orElseThrow(() -> new UserNotFoundException("User not found"));
     }
+
+
 
     public UserDetailsResponse updateUser(UpdateUserRequest request) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();

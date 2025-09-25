@@ -1,5 +1,7 @@
 package com.petbook.petbook_backend.dto.response;
 
+
+
 import com.petbook.petbook_backend.models.ImageUrl;
 import com.petbook.petbook_backend.models.Pet;
 import lombok.AllArgsConstructor;
@@ -15,7 +17,7 @@ import java.util.List;
 
 @Data
 @Builder
-public class PetInfoPublicResponse {
+public class PetInfoPublicListingDTO{
 
     private Long id;
     private String name;
@@ -23,7 +25,7 @@ public class PetInfoPublicResponse {
     private String breed;
     private String location;
     private String gender;
-    private List<String> imageUrls;
+    private String imageUrl;
     private boolean adopted = false;
     private String owner;
     private String description;
@@ -31,14 +33,14 @@ public class PetInfoPublicResponse {
     private LocalDateTime createdAt;
 
 
-    public PetInfoPublicResponse(
+    public PetInfoPublicListingDTO(
             Long id,
             String name,
             String type,
             String breed,
             String location,
             String gender,
-            List<String> imageUrls,
+            String imageUrl,
             boolean adopted,
             String owner,
             String description,
@@ -51,7 +53,7 @@ public class PetInfoPublicResponse {
         this.breed = breed;
         this.location = location;
         this.gender = gender;
-        this.imageUrls = imageUrls;
+        this.imageUrl = imageUrl;
         this.adopted = adopted;
         this.owner = owner;
         this.description = description;
@@ -61,15 +63,15 @@ public class PetInfoPublicResponse {
 
 
 
-    public static PetInfoPublicResponse fromEntity(Pet pet) {
-        return new PetInfoPublicResponse(
+    public static PetInfoPublicListingDTO fromEntity(Pet pet) {
+        return new PetInfoPublicListingDTO(
                 pet.getId(),
                 pet.getName(),
                 pet.getType(),
                 pet.getBreed(),
                 pet.getLocation(),
                 String.valueOf(pet.getGender()),
-                pet.getImages().stream().map(ImageUrl::getUrl).toList(),
+                pet.getImages().get(0).getUrl(),
                 pet.isAdopted(),
                 pet.getOwner().getEmail(),
                 pet.getDescription(),

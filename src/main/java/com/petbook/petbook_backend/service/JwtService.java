@@ -1,6 +1,7 @@
 package com.petbook.petbook_backend.service;
 
 
+import com.petbook.petbook_backend.models.CustomUserDetails;
 import com.petbook.petbook_backend.models.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -41,6 +42,7 @@ public class JwtService {
         return Jwts.builder()
                 .setClaims(extraClaims)
                 .setSubject(user.getUsername())
+                .claim("userId",user.getId())
                 .claim("role",user.getRole().name())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
@@ -50,9 +52,13 @@ public class JwtService {
 
 
     //----------------------TOKEN VALIDATION LOGIC------------------------------//
-    public boolean isTokenValid(String token, UserDetails userDetails) {
+    public boolean isTokenValid(String token, CustomUserDetails userDetails) {
         final String username = extractUsername(token);
         return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+    }
+    public boolean isTokenValid(String token, User user) {
+        final String username = extractUsername(token);
+        return username.equals(user.getUsername()) && !isTokenExpired(token);
     }
 
     private boolean isTokenExpired(String token) {
@@ -79,6 +85,14 @@ public class JwtService {
         final Claims claims = extractAllClaims(token);
         return claimsTFunction.apply(claims);
     }
+    public Long extractUserId(String token) {
+        return extractClaim(token, claims -> claims.get("userId", Long.class));
+    }
+
+    public String extractUserRole(String token) {
+        return extractClaim(token, claims -> claims.get("role", String.class));
+    }
+
 
     private Key getSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
