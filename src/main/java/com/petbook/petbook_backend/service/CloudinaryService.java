@@ -4,6 +4,7 @@ import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.petbook.petbook_backend.exceptions.rest.ImageUploadException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,6 +15,7 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CloudinaryService {
     private final Cloudinary cloudinary;
 
@@ -38,9 +40,10 @@ public class CloudinaryService {
 
     public void deleteFile(String publicId) {
         try {
-            cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+            if (!publicId.isEmpty())
+                cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
         } catch (IOException e) {
-            throw new RuntimeException("Image deletion from cloudinary failed", e);
+            log.error("Image deletion from cloudinary failed {}", e.getMessage());
         }
     }
 
