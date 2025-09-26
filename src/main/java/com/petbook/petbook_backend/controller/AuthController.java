@@ -84,7 +84,7 @@ public class AuthController {
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
         return ResponseEntity.ok(ApiResponse.success("New token issued", authResponse));
     }
-
+@PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
         authService.logout(request,response);
         // Clear cookie regardless
