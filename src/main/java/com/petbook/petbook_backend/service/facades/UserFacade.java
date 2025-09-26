@@ -22,6 +22,7 @@ public class UserFacade {
         if (image != null && !image.isEmpty()) {
             Map<String, String> imageUrls  = cloudinaryService.uploadFile(image);
             for(Map.Entry map : imageUrls.entrySet()){
+                System.out.println(map.getValue());
                 request.setProfileImageUrl(map.getKey().toString());
                 request.setPublicId(map.getValue().toString());
             }
