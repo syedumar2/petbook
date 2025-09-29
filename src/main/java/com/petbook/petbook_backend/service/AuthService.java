@@ -4,17 +4,19 @@ import com.petbook.petbook_backend.dto.request.LoginRequest;
 import com.petbook.petbook_backend.dto.request.RegisterRequest;
 import com.petbook.petbook_backend.dto.response.AuthResponse;
 import com.petbook.petbook_backend.exceptions.rest.UnauthorizedUserException;
+import com.petbook.petbook_backend.models.Notification;
 import com.petbook.petbook_backend.models.NotificationType;
 import com.petbook.petbook_backend.models.Role;
 import com.petbook.petbook_backend.models.User;
 import com.petbook.petbook_backend.repository.BlacklistedUserRepository;
+import com.petbook.petbook_backend.repository.NotificationRepository;
 import com.petbook.petbook_backend.repository.UserRepository;
 import com.petbook.petbook_backend.service.events.NotificationEvent;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
+import org.aspectj.weaver.ast.Not;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,6 +25,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.security.auth.RefreshFailedException;
 import java.time.LocalDateTime;
@@ -36,9 +39,9 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final BlacklistedUserRepository blacklistedUserRepository;
-    private final ApplicationEventPublisher applicationEventPublisher;
+    private final NotificationRepository notificationRepository;
 
-
+    @Transactional
     public String register(RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new IllegalArgumentException("Email already in use");
@@ -52,11 +55,19 @@ public class AuthService {
         user.setCreatedAt(LocalDateTime.now());
         user.setRole(Role.USER);
 
-        user = userRepository.save(user);
 
-        applicationEventPublisher.publishEvent(NotificationEvent.builder().recipientUserId(user.getId())
+        user = userRepository.save(user);
+        userRepository.flush();
+        Notification notification = Notification.builder()
+                .recipientId(user.getId())
+                .message("Welcome to PetBook, " + user.getLastname() +
+                        "! Start exploring adorable pets and connect with fellow animal lovers today!")
                 .type(NotificationType.WELCOME)
-                .message("“Welcome to PetBook, " + user.getLastname() + "! \uD83D\uDC3E Start exploring adorable pets and connect with fellow animal lovers today!"));
+                .createdAt(LocalDateTime.now())
+                .isRead(false)
+                .build();
+        notificationRepository.save(notification);
+
 
 
         return "User registered successfully";
@@ -113,7 +124,7 @@ public class AuthService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
 
-        if (!jwtService.isTokenValid(refreshToken,user)) {  // optional: overload to skip UserDetails check
+        if (!jwtService.isTokenValid(refreshToken, user)) {  // optional: overload to skip UserDetails check
             throw new RefreshFailedException("Invalid Refresh Token");
         }
 
@@ -161,7 +172,7 @@ public class AuthService {
     private String extractRefreshTokenFromCookie(HttpServletRequest request) {
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
-                if ("refreshToken" .equals(cookie.getName())) {
+                if ("refreshToken".equals(cookie.getName())) {
                     return cookie.getValue();
                 }
             }
