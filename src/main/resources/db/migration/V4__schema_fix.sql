@@ -1,0 +1,2 @@
+
+ALTER TABLE users MODIFY COLUMN public_id VARCHAR(255) NULL;

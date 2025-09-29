@@ -140,7 +140,7 @@ public class UserController {
 
     //Profile update controller
     @PatchMapping(value = "auth/user/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ApiResponse<UserDetailsResponse>> updateUser(@RequestPart("userData") UpdateUserRequest request,
+    public ResponseEntity<ApiResponse<UserDetailsResponse>> updateUser(@RequestPart(value = "userData") UpdateUserRequest request,
                                                                        @RequestPart(value = "imageUrl", required = false) MultipartFile image
     ) {
 

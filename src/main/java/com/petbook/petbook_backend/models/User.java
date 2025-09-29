@@ -27,6 +27,7 @@ public class User implements UserDetails {
     private String email;
 
     private String profileImageUrl;
+    @Column(name = "public_id", nullable = true)
     private String publicId;
 
     @Column(nullable = false)
